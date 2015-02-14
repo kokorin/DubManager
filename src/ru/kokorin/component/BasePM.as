@@ -12,10 +12,10 @@ import ru.kokorin.util.LogUtil;
 [Event(name="close", type="flash.events.Event")]
 [Event(name="save", type="ru.kokorin.component.SaveEvent")]
 public class BasePM extends EventDispatcher {
-    public var aStream:AStream;
     private var itemClazz:Class;
     private var _item:Object;
     private var _original:Object;
+    public const aStream:AStream = new AStream();
 
     protected const LOGGER:ILogger = LogUtil.getLogger(this);
 

@@ -1,0 +1,45 @@
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+s|Button {
+    skinClass: ClassReference("flatspark.skins.ButtonSkin");
+}
+s|TextInput {
+    skinClass: ClassReference("flatspark.skins.TextInputSkin");
+}
+s|CheckBox {
+    skinClass: ClassReference("flatspark.skins.CheckBoxSkin");
+}
+s|RadioButton {
+    skinClass: ClassReference("flatspark.skins.RadioButtonSkin");
+}
+s|CheckBox {
+    skinClass: ClassReference("flatspark.skins.CheckBoxSkin");
+}
+s|RadioButton {
+    skinClass: ClassReference("flatspark.skins.RadioButtonSkin");
+}
+s|TitleWindow {
+    skinClass: ClassReference("flatspark.skins.TitleWindowSkin");
+}
+s|Panel {
+    skinClass: ClassReference("flatspark.skins.PanelSkin");
+}
+s|ComboBox {
+    skinClass: ClassReference("flatspark.skins.ComboBoxSkin");
+}
+s|DropDownList {
+    skinClass: ClassReference("flatspark.skins.DropDownListSkin");
+}
+s|ProgressBar {
+    skinClass: ClassReference("flatspark.skins.ProgressBarSkin");
+}
+s|Alert {
+    skinClass: ClassReference("flatspark.skins.AlertSkin");
+}
+global
+{
+    modal-transparency: 0.5;
+    modal-transparency-blur: 1;
+    modal-transparency-color: #888888;
+}
