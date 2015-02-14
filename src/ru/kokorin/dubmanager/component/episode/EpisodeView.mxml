@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component:BaseView xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:component="ru.kokorin.component.*"
+                    maxHeight="300" maxWidth="400">
+	
+	<component:title>Эпизод{changeTracker.changed?' *':''}</component:title>
+	<fx:Script>
+		<![CDATA[
+        import mx.collections.ArrayList;
+
+        import ru.kokorin.dubmanager.domain.EpisodeStatus;
+
+        [Bindable]
+        public function get model():EpisodePM {
+            return getModel() as EpisodePM;
+        }
+        public function set model(value:EpisodePM):void {
+            setModel(value);
+        }
+
+        private function statusLabel(status:EpisodeStatus):String {
+            return resourceManager.getString('episode_status', status.name);
+        }
+        ]]>
+	</fx:Script>
+
+	<s:Form width="100%">
+		<s:layout>
+			<s:FormLayout gap="-16" paddingLeft="-20" paddingRight="-20" paddingTop="-10" paddingBottom="-15"/>
+		</s:layout>
+		<s:FormItem width="100%" label="Номер">
+			<s:NumericStepper width="100" value="@{model.episode.number}"
+                              minimum="0" maximum="{Number.MAX_VALUE}"
+                              stepSize="1" snapInterval="0.1"/>
+		</s:FormItem>
+		<s:FormItem width="100%" label="Статус">
+			<s:DropDownList width="100%" labelField="displayName"
+							selectedItem="@{model.episode.status}"
+                            dataProvider="{new ArrayList(EpisodeStatus.statuses)}"
+                            labelFunction="{statusLabel}"/>
+		</s:FormItem>
+		<s:FormItem width="100%" label="Дата">
+            <!--Can't use two-way binding with DataField: it causes ChangeTracker to detect change
+                on opening -->
+			<mx:DateField id="dateField" width="100" selectedDate="{model.episode.date}"
+                          change="{model.episode.date = dateField.selectedDate}"
+                          editable="true" yearNavigationEnabled="true"/>
+		</s:FormItem>
+	</s:Form>
+</component:BaseView>

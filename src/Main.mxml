@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+                       xmlns:s="library://ns.adobe.com/flex/spark"
+                       xmlns:parsley="http://www.spicefactory.org/parsley"
+                       xmlns:workspace="ru.kokorin.dubmanager.component.workspace.*"
+                       creationComplete="{onCC()}"
+                       width="800" height="600">
+
+    <fx:Style source="style.css"/>
+    <fx:Metadata>
+        [ResourceBundle("episode_status")]
+    </fx:Metadata>
+
+    <fx:Declarations>
+        <parsley:ContextBuilder description="Main Context">
+            <parsley:FlexConfig type="{MainConfig}"/>
+        </parsley:ContextBuilder>
+
+        <parsley:FastInject>
+            <parsley:Inject property="workspacePM" type="{WorkspacePM}"/>
+        </parsley:FastInject>
+    </fx:Declarations>
+    <fx:Script>
+		<![CDATA[
+        import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
+
+        private function onCC():void {
+            //TODO dispatch init event with parsley dispatcher
+        }
+
+        [Bindable]
+        public var workspacePM:WorkspacePM;
+        ]]>
+	</fx:Script>
+
+    <workspace:WorkspaceView width="100%" height="100%" model="{workspacePM}"/>
+
+</s:WindowedApplication>

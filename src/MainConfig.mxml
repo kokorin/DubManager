@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<fx:Object xmlns:fx="http://ns.adobe.com/mxml/2009"
+           xmlns:parsley="http://www.spicefactory.org/parsley">
+    <fx:Declarations>
+        <parsley:Object type="{WorkspacePM}">
+            <parsley:ManagedEvents names="{[SerialEvent.SAVE]}"/>
+
+            <parsley:CommandResult selector="{Event.INIT}" type="{Event}"
+                                   method="onLoadResult"/>
+        </parsley:Object>
+    </fx:Declarations>
+
+    <fx:Script><![CDATA[
+        import ru.kokorin.astream.AStream;
+        import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
+        import ru.kokorin.dubmanager.domain.Serial;
+        import ru.kokorin.dubmanager.event.SerialEvent;
+
+        public var aStream:AStream = function():AStream {
+            const result:AStream = new AStream();
+            result.autodetectMetadata(true);
+            result.alias("Data", Vector.<Serial>);
+            return result;
+        }();
+        ]]>
+    </fx:Script>
+</fx:Object>

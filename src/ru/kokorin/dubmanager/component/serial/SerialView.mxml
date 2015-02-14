@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component:BaseView xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:util="ru.kokorin.dubmanager.util.*"
+                    xmlns:component="ru.kokorin.component.*"
+                    xmlns:episode="ru.kokorin.dubmanager.component.episode.*"
+                    xmlns:parsley="http://www.spicefactory.org/parsley">
+
+    <component:title>Аниме{changeTracker.changed?' *':''}</component:title>
+
+    <fx:Declarations>
+        <s:ArrayCollection id="types">
+            <fx:String>Сериал</fx:String>
+            <fx:String>OVA</fx:String>
+            <fx:String>Фильм</fx:String>
+        </s:ArrayCollection>
+
+        <util:RuDateFormatter id="dateFromatter"/>
+
+        <episode:EpisodePM id="episodePM"/>
+
+        <parsley:PopUp open="{episodePM.isOpen}" modal="true" reuse="false">
+            <parsley:behaviors>
+                <fx:Array>
+                    <component:KeepMaxSizeBehavior/>
+                </fx:Array>
+            </parsley:behaviors>
+            <episode:EpisodeView model="{episodePM}"/>
+        </parsley:PopUp>
+    </fx:Declarations>
+    <fx:Script>
+		<![CDATA[
+        import mx.collections.ArrayList;
+
+        import ru.kokorin.dubmanager.domain.SerialStatus;
+
+        [Bindable]
+        public function get model():SerialPM {
+            return getModel() as SerialPM;
+        }
+
+        public function set model(value:SerialPM):void {
+            setModel(value);
+        }
+
+
+        override protected function clear():void {
+            super.clear();
+            viewstack.selectedIndex = 0;
+        }
+
+        /*private function addSubItem():void {
+         var lastdsi:DubSubItem = new DubSubItem();
+         if (!model.serial.subItems) {
+         model.serial.subItems = new ArrayCollection();
+         }
+         for each(var dsi:DubSubItem in model.serial.subItems) {
+         if (lastdsi.number < dsi.number) {
+         lastdsi = dsi;
+         }
+         }
+         lastdsi = lastdsi.clone();
+         lastdsi.id = NaN;
+         if (lastdsi.date) {
+         lastdsi.date.date += 7;
+         } else {
+         lastdsi.date = new Date();
+         }
+         lastdsi.number += 1;
+         model.serial.subItems.addItem(lastdsi);
+         //openSubItem(dsi);
+         }*/
+        ]]>
+	</fx:Script>
+
+    <component:layout>
+        <s:VerticalLayout paddingLeft="5" paddingRight="5" paddingTop="5"/>
+    </component:layout>
+
+    <s:TabBar dataProvider="{viewstack}" width="300"/>
+    <mx:ViewStack id="viewstack" width="100%" height="100%">
+        <s:NavigatorContent width="100%" height="100%" label="Общее">
+            <s:Scroller width="100%" height="100%">
+                <s:Group width="100%">
+                    <s:Form width="100%">
+                        <s:layout>
+                            <s:FormLayout gap="-16" paddingLeft="-25" paddingRight="-25" paddingTop="-15"
+                                          paddingBottom="-15"/>
+                        </s:layout>
+                        <s:FormItem width="100%" label="Название">
+                            <s:TextInput width="100%" text="@{model.serial.name}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Тип">
+                            <s:DropDownList width="100%" selectedItem="@{model.serial.type}" dataProvider="{types}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Статус">
+                            <s:DropDownList width="100%" labelField="displayName"
+                                            selectedItem="@{model.serial.status}"
+                                            dataProvider="{new ArrayList(SerialStatus.statuses)}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Кол-во серий">
+                            <s:NumericStepper width="100" minimum="0" maximum="{Number.MAX_VALUE}"
+                                              value="@{model.serial.episodesCount}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Видео">
+                            <s:TextInput width="100%" text="@{model.serial.videoURL}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Субтитры">
+                            <s:TextInput width="100%" text="@{model.serial.subtitleURL}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Тайминг">
+                            <s:TextInput width="100%" text="@{model.serial.timingBy}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Звук">
+                            <s:TextInput width="100%" text="@{model.serial.soundBy}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Сведение">
+                            <s:TextInput width="100%" text="@{model.serial.integrationBy}"/>
+                        </s:FormItem>
+                        <s:FormItem width="100%" label="Комментарий">
+                            <s:TextArea width="100%" text="@{model.serial.comment}" heightInLines="10"/>
+                        </s:FormItem>
+                    </s:Form>
+                </s:Group>
+            </s:Scroller>
+        </s:NavigatorContent>
+
+        <s:NavigatorContent width="100%" height="100%" label="Серии">
+            <s:VGroup width="100%" height="100%">
+                <s:HGroup width="100%" horizontalAlign="right">
+                    <s:Button width="100" label="Добавить" click="{episodePM.open()}"/>
+                    <s:Button width="100" label="Открыть" click="{episodePM.open(dg.selectedItem)}"
+                              enabled="{dg.selectedItem}"/>
+                    <s:Button width="100" label="Удалить" click="{model.removeEpisode(dg.selectedItem)}"
+                              enabled="{dg.selectedItem}"/>
+                </s:HGroup>
+                <s:DataGrid id="dg" width="100%" height="100%"
+                            dataProvider="{model.serial.episodes}">
+                    <s:columns>
+                        <s:ArrayList>
+                            <s:GridColumn dataField="number" headerText="Номер"/>
+                            <s:GridColumn dataField="status.displayName" headerText="Статус"/>
+                            <s:GridColumn dataField="date" headerText="Дата" formatter="{dateFromatter}"/>
+                        </s:ArrayList>
+                    </s:columns>
+                </s:DataGrid>
+            </s:VGroup>
+        </s:NavigatorContent>
+    </mx:ViewStack>
+</component:BaseView>

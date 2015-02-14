@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:cairngorm="http://ns.adobe.com/cairngorm"
+         show="{setFocus()}">
+    <fx:Declarations>
+        <cairngorm:ChangeTracker id="changeTracker" target="{model.item as IEventDispatcher}"/>
+    </fx:Declarations>
+    <fx:Script>
+		<![CDATA[
+        import mx.controls.Alert;
+        import mx.events.CloseEvent;
+        import mx.events.ValidationResultEvent;
+        import mx.logging.ILogger;
+        import mx.validators.Validator;
+
+        import ru.kokorin.util.LogUtil;
+
+        public var validators:Array;
+
+        [Bindable]
+        private var model:BasePM;
+        protected const LOGGER:ILogger = LogUtil.getLogger(this);
+
+        protected function getModel():BasePM {
+            return model;
+        }
+
+        protected function setModel(value:BasePM):void {
+            if (model !== value) {
+                if (model) {
+                    model.removeEventListener(Event.CLOSE, onModelClose);
+                }
+                model = value;
+                if (model) {
+                    model.addEventListener(Event.CLOSE, onModelClose);
+                }
+                LOGGER.debug("Model set: {0}", value);
+                dispatchEvent(new Event("modelChange"));
+            }
+        }
+
+        private function onModelClose(event:Event):void {
+            clear();
+        }
+
+        protected function clear():void {
+        }
+
+        private function save():void {
+            if (validate()) {
+                model.save();
+            }
+        }
+
+        private function close():void {
+            if (changeTracker.changed) {
+                LOGGER.info("Detected model change, asking to confirm close");
+                Alert.show("Are you sure you want to close dialog? Unsaved data will be lost.", "Attention",
+                        Alert.YES | Alert.CANCEL, this, doClose);
+            } else {
+                doClose();
+            }
+        }
+
+        private function doClose(event:CloseEvent = null):void {
+            if (!event || event.detail == Alert.YES) {
+                model.close();
+            }
+        }
+
+        private function validate():Boolean {
+            var result:Array;
+            if (validators != null) {
+                LOGGER.debug("Validating model");
+                result = Validator.validateAll(validators);
+            }
+
+            if (result != null && result.length != 0) {
+                LOGGER.info("Validation failed, informing user");
+                const event:ValidationResultEvent = result[0] as ValidationResultEvent;
+                Alert.show(event.message, "Error", Alert.OK, this);
+                return false;
+            }
+            return true;
+        }
+        ]]>
+	</fx:Script>
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle" paddingTop="2" paddingBottom="2"/>
+    </s:controlBarLayout>
+    <s:controlBarContent>
+        <s:Button width="50%" maxWidth="120" label="Save"
+                  click="{save()}" enabled="{changeTracker.changed}"/>
+        <s:Button width="50%" maxWidth="120" label="Cancel"
+                  click="{close()}"/>
+    </s:controlBarContent>
+</s:Panel>
