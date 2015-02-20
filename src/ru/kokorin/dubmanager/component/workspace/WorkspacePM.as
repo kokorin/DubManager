@@ -10,9 +10,12 @@ import ru.kokorin.dubmanager.event.SerialEvent;
 [Event(name="save", type="ru.kokorin.dubmanager.event.SerialEvent")]
 public class WorkspacePM extends EventDispatcher {
     [Bindable]
-    public var serials:VectorCollection = new VectorCollection(new Vector.<Serial>());
+    public var serials:VectorCollection;
 
     public function onLoadResult(result:Vector.<Serial>, event:Event):void {
+        if (!result) {
+            result = new Vector.<Serial>();
+        }
         serials = new VectorCollection(result);
     }
 

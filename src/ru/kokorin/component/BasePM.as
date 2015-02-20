@@ -36,7 +36,7 @@ public class BasePM extends EventDispatcher {
     }
 
     public function open(item:Object = null):void {
-        const orig:Object = item;
+        LOGGER.debug("Opening {0}", item);
         if (item == null) {
             _item = new itemClazz();
         } else {
@@ -57,7 +57,7 @@ public class BasePM extends EventDispatcher {
     }
 
     public function close():void {
-        LOGGER.info("Closing dialog");
+        LOGGER.debug("Closing dialog");
         _item = null;
         _original = null;
         dispatchEvent(new Event(Event.CLOSE));

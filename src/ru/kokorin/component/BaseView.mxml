@@ -4,17 +4,21 @@
          xmlns:cairngorm="http://ns.adobe.com/cairngorm"
          show="{setFocus()}">
     <fx:Declarations>
-        <cairngorm:ChangeTracker id="changeTracker" target="{model.item as IEventDispatcher}"/>
+        <cairngorm:ChangeTracker id="changeTracker" target="{model.item as IEventDispatcher}"
+                    changeEvents="{[[PropertyChangeEvent.PROPERTY_CHANGE, CollectionEvent.COLLECTION_CHANGE]]}"/>
     </fx:Declarations>
     <fx:Script>
 		<![CDATA[
-        import mx.controls.Alert;
         import mx.events.CloseEvent;
+        import mx.events.CollectionEvent;
+        import mx.events.PropertyChangeEvent;
         import mx.events.ValidationResultEvent;
         import mx.logging.ILogger;
         import mx.validators.Validator;
 
         import ru.kokorin.util.LogUtil;
+
+        import spark.components.Alert;
 
         public var validators:Array;
 
@@ -90,9 +94,11 @@
         <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle" paddingTop="2" paddingBottom="2"/>
     </s:controlBarLayout>
     <s:controlBarContent>
-        <s:Button width="50%" maxWidth="120" label="Save"
+        <s:Button width="50%" maxWidth="120" styleName="saveButton"
+                  label="{resourceManager.getString('component', 'save')}"
                   click="{save()}" enabled="{changeTracker.changed}"/>
-        <s:Button width="50%" maxWidth="120" label="Cancel"
+        <s:Button width="50%" maxWidth="120" styleName="cancelButton"
+                  label="{resourceManager.getString('component', 'cancel')}"
                   click="{close()}"/>
     </s:controlBarContent>
 </s:Panel>

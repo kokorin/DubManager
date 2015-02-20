@@ -5,18 +5,32 @@
         <parsley:Object type="{WorkspacePM}">
             <parsley:ManagedEvents names="{[SerialEvent.SAVE]}"/>
 
-            <parsley:CommandResult selector="{Event.INIT}" type="{Event}"
+            <parsley:CommandResult selector="{SerialEvent.LOAD}" type="{SerialEvent}"
                                    method="onLoadResult"/>
         </parsley:Object>
+
+        <parsley:MapCommand selector="{SerialEvent.LOAD}" messageType="{SerialEvent}">
+            <parsley:Command type="{LoadSerialsCommand}">
+                <parsley:Property name="aStream" typeRef="{AStream}"/>
+            </parsley:Command>
+        </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{SerialEvent.SAVE}" messageType="{SerialEvent}">
+            <parsley:Command type="{SaveSerialsCommand}">
+                <parsley:Property name="aStream" typeRef="{AStream}"/>
+            </parsley:Command>
+        </parsley:MapCommand>
     </fx:Declarations>
 
     <fx:Script><![CDATA[
         import ru.kokorin.astream.AStream;
+        import ru.kokorin.dubmanager.command.LoadSerialsCommand;
+        import ru.kokorin.dubmanager.command.SaveSerialsCommand;
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
         import ru.kokorin.dubmanager.domain.Serial;
         import ru.kokorin.dubmanager.event.SerialEvent;
 
-        public var aStream:AStream = function():AStream {
+        public var aStream:AStream = function ():AStream {
             const result:AStream = new AStream();
             result.autodetectMetadata(true);
             result.alias("Data", Vector.<Serial>);

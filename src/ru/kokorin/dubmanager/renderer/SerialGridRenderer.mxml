@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:GridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark">
+    <s:states>
+        <s:State name="hovered"/>
+        <s:State name="down"/>
+        <s:State name="selected"/>
+        <s:State name="normal"/>
+        <s:State name="hoveredOverdue" stateGroups="overdue"/>
+        <s:State name="downOverdue" stateGroups="overdue"/>
+        <s:State name="selectedOverdue" stateGroups="overdue"/>
+        <s:State name="normalOverdue" stateGroups="overdue"/>
+        <s:State name="hoveredWarn" stateGroups="warn"/>
+        <s:State name="downWarn" stateGroups="warn"/>
+        <s:State name="selectedWarn" stateGroups="warn"/>
+        <s:State name="normalWarn" stateGroups="warn"/>
+    </s:states>
+    <fx:Script>
+        <![CDATA[
+        import ru.kokorin.dubmanager.domain.Episode;
+        import ru.kokorin.dubmanager.domain.EpisodeStatus;
+        import ru.kokorin.dubmanager.domain.Serial;
+        import ru.kokorin.dubmanager.domain.SerialStatus;
+
+        /*private static const OVERDUE:uint = 0xf1aa9f;
+        private static const WARN:uint = 0xf2f9b9;
+        private static const NORMAL:uint = 0x000000ff;*/
+
+        override protected function getCurrentRendererState():String {
+            var stateExtension:String = "";
+            const serial:Serial = data as Serial;
+            if (serial && serial.status == SerialStatus.IN_PROCESS) {
+                var nextEp:Date = new Date(2100, 0, 1);
+                for each(var episode:Episode in serial.episodes) {
+                    //Looking for latest completed episode
+                    if (episode.status == EpisodeStatus.NOT_STARTED && episode.date && episode.date.time < nextEp.time) {
+                        nextEp = episode.date;
+                    }
+                }
+
+                const today:Date = new Date();
+                today.hours = 23;
+                today.minutes = 59;
+                today.seconds = 59;
+                const weekAgo:Date = new Date(today);
+                weekAgo.date -= 7;
+
+                if (nextEp.time < weekAgo.time) {
+                    stateExtension = "Overdue";
+                } else if (nextEp.time < today.time) {
+                    stateExtension = "Warn";
+                }
+            }
+
+            return super.getCurrentRendererState() + stateExtension;
+        }
+        ]]>
+    </fx:Script>
+    <s:Rect top="0" bottom="0" right="0" left="0" includeIn="overdue,warn">
+        <s:fill>
+            <s:SolidColor color.overdue="red" color.warn="yellow" alpha="0.2"/>
+        </s:fill>
+    </s:Rect>
+    <s:Label id="labelDisplay" top="4" bottom="4" left="4" right="4"
+             verticalAlign="middle" lineBreak="explicit"/>
+</s:GridItemRenderer>

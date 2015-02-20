@@ -15,6 +15,7 @@ public class SerialPM extends BasePM {
         return item as Serial;
     }
 
+    //TODO при изменении эпизодов не устанавливается флаг изменений в SerialView
     public function saveEpisode(episode:Object, original:Object):void {
         if (!serial.episodes) {
             serial.episodes = new ArrayCollection();

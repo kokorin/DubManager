@@ -7,18 +7,12 @@
                     xmlns:episode="ru.kokorin.dubmanager.component.episode.*"
                     xmlns:parsley="http://www.spicefactory.org/parsley">
 
-    <component:title>Аниме{changeTracker.changed?' *':''}</component:title>
+    <component:title>{resourceManager.getString('component', 'serial')}{changeTracker.changed?' *':''}</component:title>
 
     <fx:Declarations>
-        <s:ArrayCollection id="types">
-            <fx:String>Сериал</fx:String>
-            <fx:String>OVA</fx:String>
-            <fx:String>Фильм</fx:String>
-        </s:ArrayCollection>
-
         <util:RuDateFormatter id="dateFromatter"/>
 
-        <episode:EpisodePM id="episodePM"/>
+        <episode:EpisodePM id="episodePM" save="{model.saveEpisode(event.item, event.original)}"/>
 
         <parsley:PopUp open="{episodePM.isOpen}" modal="true" reuse="false">
             <parsley:behaviors>
@@ -33,7 +27,11 @@
 		<![CDATA[
         import mx.collections.ArrayList;
 
+        import ru.kokorin.dubmanager.domain.EpisodeStatus;
+
         import ru.kokorin.dubmanager.domain.SerialStatus;
+        import ru.kokorin.dubmanager.domain.SerialType;
+        import ru.kokorin.util.LabelUtil;
 
         [Bindable]
         public function get model():SerialPM {
@@ -49,103 +47,94 @@
             super.clear();
             viewstack.selectedIndex = 0;
         }
-
-        /*private function addSubItem():void {
-         var lastdsi:DubSubItem = new DubSubItem();
-         if (!model.serial.subItems) {
-         model.serial.subItems = new ArrayCollection();
-         }
-         for each(var dsi:DubSubItem in model.serial.subItems) {
-         if (lastdsi.number < dsi.number) {
-         lastdsi = dsi;
-         }
-         }
-         lastdsi = lastdsi.clone();
-         lastdsi.id = NaN;
-         if (lastdsi.date) {
-         lastdsi.date.date += 7;
-         } else {
-         lastdsi.date = new Date();
-         }
-         lastdsi.number += 1;
-         model.serial.subItems.addItem(lastdsi);
-         //openSubItem(dsi);
-         }*/
         ]]>
 	</fx:Script>
 
     <component:layout>
-        <s:VerticalLayout paddingLeft="5" paddingRight="5" paddingTop="5"/>
+        <s:VerticalLayout paddingLeft="5" paddingRight="5" paddingTop="5" paddingBottom="5"
+                          gap="0"/>
     </component:layout>
 
     <s:TabBar dataProvider="{viewstack}" width="300"/>
-    <mx:ViewStack id="viewstack" width="100%" height="100%">
-        <s:NavigatorContent width="100%" height="100%" label="Общее">
-            <s:Scroller width="100%" height="100%">
-                <s:Group width="100%">
-                    <s:Form width="100%">
-                        <s:layout>
-                            <s:FormLayout gap="-16" paddingLeft="-25" paddingRight="-25" paddingTop="-15"
-                                          paddingBottom="-15"/>
-                        </s:layout>
-                        <s:FormItem width="100%" label="Название">
-                            <s:TextInput width="100%" text="@{model.serial.name}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Тип">
-                            <s:DropDownList width="100%" selectedItem="@{model.serial.type}" dataProvider="{types}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Статус">
-                            <s:DropDownList width="100%" labelField="displayName"
-                                            selectedItem="@{model.serial.status}"
-                                            dataProvider="{new ArrayList(SerialStatus.statuses)}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Кол-во серий">
-                            <s:NumericStepper width="100" minimum="0" maximum="{Number.MAX_VALUE}"
-                                              value="@{model.serial.episodesCount}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Видео">
-                            <s:TextInput width="100%" text="@{model.serial.videoURL}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Субтитры">
-                            <s:TextInput width="100%" text="@{model.serial.subtitleURL}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Тайминг">
-                            <s:TextInput width="100%" text="@{model.serial.timingBy}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Звук">
-                            <s:TextInput width="100%" text="@{model.serial.soundBy}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Сведение">
-                            <s:TextInput width="100%" text="@{model.serial.integrationBy}"/>
-                        </s:FormItem>
-                        <s:FormItem width="100%" label="Комментарий">
-                            <s:TextArea width="100%" text="@{model.serial.comment}" heightInLines="10"/>
-                        </s:FormItem>
-                    </s:Form>
-                </s:Group>
-            </s:Scroller>
-        </s:NavigatorContent>
+    <s:BorderContainer width="100%" height="100%">
+        <mx:ViewStack id="viewstack" width="100%" height="100%">
+            <s:NavigatorContent width="100%" height="100%" label="{resourceManager.getString('component', 'serial.details')}">
+                <s:Scroller width="100%" height="100%">
+                    <s:Group width="100%">
+                        <s:Form width="100%">
+                            <s:layout>
+                                <s:FormLayout gap="-16" paddingLeft="-15" paddingRight="-15" paddingTop="-5" paddingBottom="-5"/>
+                            </s:layout>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.name')}">
+                                <s:TextInput width="100%" text="@{model.serial.name}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.type')}">
+                                <s:DropDownList id="typeList" width="100%"
+                                                labelFunction="{LabelUtil.getEnumLabelFunction(SerialType)}"
+                                                dataProvider="{new ArrayList(SerialType.types)}"
+                                                selectedItem="{model.serial.type}"
+                                                change="{model.serial.type = typeList.selectedItem as SerialType}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.status')}">
+                                <s:DropDownList id="statusList" width="100%"
+                                                labelFunction="{LabelUtil.getEnumLabelFunction(SerialStatus)}"
+                                                dataProvider="{new ArrayList(SerialStatus.statuses)}"
+                                                selectedItem="{model.serial.status}"
+                                                change="{model.serial.status = statusList.selectedItem as SerialStatus}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.episodesCount')}">
+                                <s:NumericStepper width="100" minimum="0" maximum="{Number.MAX_VALUE}"
+                                                  value="@{model.serial.episodesCount}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.videoURL')}">
+                                <s:TextInput width="100%" text="@{model.serial.videoURL}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.subtitleURL')}">
+                                <s:TextInput width="100%" text="@{model.serial.subtitleURL}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.timingBy')}">
+                                <s:TextInput width="100%" text="@{model.serial.timingBy}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.soundBy')}">
+                                <s:TextInput width="100%" text="@{model.serial.soundBy}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.integrationBy')}">
+                                <s:TextInput width="100%" text="@{model.serial.integrationBy}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'serial.comment')}">
+                                <s:TextArea width="100%" text="@{model.serial.comment}" heightInLines="10"/>
+                            </s:FormItem>
+                        </s:Form>
+                    </s:Group>
+                </s:Scroller>
+            </s:NavigatorContent>
 
-        <s:NavigatorContent width="100%" height="100%" label="Серии">
-            <s:VGroup width="100%" height="100%">
-                <s:HGroup width="100%" horizontalAlign="right">
-                    <s:Button width="100" label="Добавить" click="{episodePM.open()}"/>
-                    <s:Button width="100" label="Открыть" click="{episodePM.open(dg.selectedItem)}"
-                              enabled="{dg.selectedItem}"/>
-                    <s:Button width="100" label="Удалить" click="{model.removeEpisode(dg.selectedItem)}"
-                              enabled="{dg.selectedItem}"/>
-                </s:HGroup>
-                <s:DataGrid id="dg" width="100%" height="100%"
-                            dataProvider="{model.serial.episodes}">
-                    <s:columns>
-                        <s:ArrayList>
-                            <s:GridColumn dataField="number" headerText="Номер"/>
-                            <s:GridColumn dataField="status.displayName" headerText="Статус"/>
-                            <s:GridColumn dataField="date" headerText="Дата" formatter="{dateFromatter}"/>
-                        </s:ArrayList>
-                    </s:columns>
-                </s:DataGrid>
-            </s:VGroup>
-        </s:NavigatorContent>
-    </mx:ViewStack>
+            <s:NavigatorContent width="100%" height="100%" label="{resourceManager.getString('component', 'episodes')}">
+                <s:VGroup width="100%" height="100%"
+                          paddingLeft="5" paddingRight="5" paddingBottom="5" paddingTop="5">
+                    <s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right">
+                        <s:Button width="100" label="{resourceManager.getString('component', 'add')}"
+                                  click="{episodePM.open()}"/>
+                        <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
+                                  click="{episodePM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
+                        <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
+                                  click="{model.removeEpisode(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
+                    </s:HGroup>
+                    <s:DataGrid id="dg" width="100%" height="100%"
+                                dataProvider="{model.serial.episodes}">
+                        <s:columns>
+                            <s:ArrayList>
+                                <s:GridColumn dataField="number"
+                                              headerText="{resourceManager.getString('component', 'episode.number')}"/>
+                                <s:GridColumn dataField="status" labelFunction="{LabelUtil.getEnumLabelFunction(EpisodeStatus)}"
+                                              headerText="{resourceManager.getString('component', 'episode.status')}"/>
+                                <s:GridColumn dataField="date" formatter="{dateFromatter}"
+                                              headerText="{resourceManager.getString('component', 'episode.date')}"/>
+                            </s:ArrayList>
+                        </s:columns>
+                    </s:DataGrid>
+                </s:VGroup>
+            </s:NavigatorContent>
+        </mx:ViewStack>
+    </s:BorderContainer>
 </component:BaseView>

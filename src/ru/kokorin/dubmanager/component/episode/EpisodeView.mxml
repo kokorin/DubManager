@@ -5,12 +5,13 @@
                     xmlns:component="ru.kokorin.component.*"
                     maxHeight="300" maxWidth="400">
 	
-	<component:title>Эпизод{changeTracker.changed?' *':''}</component:title>
+	<component:title>{resourceManager.getString('component', 'episode')}{changeTracker.changed?' *':''}</component:title>
 	<fx:Script>
 		<![CDATA[
         import mx.collections.ArrayList;
 
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
+        import ru.kokorin.util.LabelUtil;
 
         [Bindable]
         public function get model():EpisodePM {
@@ -20,9 +21,6 @@
             setModel(value);
         }
 
-        private function statusLabel(status:EpisodeStatus):String {
-            return resourceManager.getString('episode_status', status.name);
-        }
         ]]>
 	</fx:Script>
 
@@ -30,19 +28,18 @@
 		<s:layout>
 			<s:FormLayout gap="-16" paddingLeft="-20" paddingRight="-20" paddingTop="-10" paddingBottom="-15"/>
 		</s:layout>
-		<s:FormItem width="100%" label="Номер">
+		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.number')}">
 			<s:NumericStepper width="100" value="@{model.episode.number}"
                               minimum="0" maximum="{Number.MAX_VALUE}"
                               stepSize="1" snapInterval="0.1"/>
 		</s:FormItem>
-		<s:FormItem width="100%" label="Статус">
-			<s:DropDownList width="100%" labelField="displayName"
-							selectedItem="@{model.episode.status}"
+		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.status')}">
+			<s:DropDownList width="100%" labelFunction="{LabelUtil.getEnumLabelFunction(EpisodeStatus)}"
                             dataProvider="{new ArrayList(EpisodeStatus.statuses)}"
-                            labelFunction="{statusLabel}"/>
+							selectedItem="@{model.episode.status}"/>
 		</s:FormItem>
-		<s:FormItem width="100%" label="Дата">
-            <!--Can't use two-way binding with DataField: it causes ChangeTracker to detect change
+		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.date')}">
+            <!--Can't use two-way binding with DataField: it causes ChangeTracker to falsely detect change
                 on opening -->
 			<mx:DateField id="dateField" width="100" selectedDate="{model.episode.date}"
                           change="{model.episode.date = dateField.selectedDate}"
