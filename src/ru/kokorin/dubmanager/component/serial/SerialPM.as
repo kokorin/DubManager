@@ -15,7 +15,6 @@ public class SerialPM extends BasePM {
         return item as Serial;
     }
 
-    //TODO при изменении эпизодов не устанавливается флаг изменений в SerialView
     public function saveEpisode(episode:Object, original:Object):void {
         if (!serial.episodes) {
             serial.episodes = new ArrayCollection();
@@ -35,37 +34,9 @@ public class SerialPM extends BasePM {
         }
 
         const index:int = serial.episodes.getItemIndex(episode);
-        if (index == -1) {
+        if (index != -1) {
             serial.episodes.removeItemAt(index);
         }
     }
-
-    /*private function calculateCurrentSubItem():void {
-     var min:Number = NaN;
-     if (status && !status.finished) {
-     for each(var si:Episode in subItems) {
-     if (!isNaN(si.number) && (!si.status || !si.status.finished) && (isNaN(min) || min > si.number)) {
-     min = si.number;
-     }
-     }
-     }
-     _currentSubItem = min;
-     dispatchEvent(new Event("currentSubItemChange"));
-     }
-
-     private function calculateNextDate():void {
-     var min:Date = null;
-     if (status && !status.finished) {
-     for each(var si:Episode in subItems) {
-     if (si.date && (!si.status || !si.status.finished) && (min == null || min.time > si.date.time)) {
-     min = si.date;
-     }
-     }
-     }
-     _nextDate = min;
-     dispatchEvent(new Event("nextDateChange"));
-     }*/
-
-
 }
 }

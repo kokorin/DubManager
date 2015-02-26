@@ -2,7 +2,6 @@
 <component:BaseView xmlns:fx="http://ns.adobe.com/mxml/2009"
                     xmlns:s="library://ns.adobe.com/flex/spark"
                     xmlns:mx="library://ns.adobe.com/flex/mx"
-                    xmlns:util="ru.kokorin.dubmanager.util.*"
                     xmlns:component="ru.kokorin.component.*"
                     xmlns:episode="ru.kokorin.dubmanager.component.episode.*"
                     xmlns:parsley="http://www.spicefactory.org/parsley">
@@ -10,8 +9,6 @@
     <component:title>{resourceManager.getString('component', 'serial')}{changeTracker.changed?' *':''}</component:title>
 
     <fx:Declarations>
-        <util:RuDateFormatter id="dateFromatter"/>
-
         <episode:EpisodePM id="episodePM" save="{model.saveEpisode(event.item, event.original)}"/>
 
         <parsley:PopUp open="{episodePM.isOpen}" modal="true" reuse="false">
@@ -22,16 +19,23 @@
             </parsley:behaviors>
             <episode:EpisodeView model="{episodePM}"/>
         </parsley:PopUp>
+
+        <s:DateTimeFormatter id="dtFormatter" dateStyle="long" timeStyle="none"/>
     </fx:Declarations>
     <fx:Script>
 		<![CDATA[
         import mx.collections.ArrayList;
+
+        import ru.kokorin.dubmanager.domain.Episode;
+
+        import ru.kokorin.dubmanager.domain.Episode;
 
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
 
         import ru.kokorin.dubmanager.domain.SerialStatus;
         import ru.kokorin.dubmanager.domain.SerialType;
         import ru.kokorin.util.LabelUtil;
+        import ru.kokorin.util.RendererUtil;
 
         [Bindable]
         public function get model():SerialPM {
@@ -46,6 +50,30 @@
         override protected function clear():void {
             super.clear();
             viewstack.selectedIndex = 0;
+        }
+
+        private function createEpisode():void {
+            var lastEpisode:Episode;
+            for each (var episode:Episode in model.serial.episodes) {
+                if (!lastEpisode || lastEpisode.number < episode.number) {
+                    lastEpisode = episode;
+                }
+            }
+
+            var newEpisode:Episode;
+            if (lastEpisode) {
+                newEpisode = new Episode();
+                newEpisode.number = lastEpisode.number + 1;
+                newEpisode.status = EpisodeStatus.NOT_STARTED;
+                newEpisode.date = new Date(lastEpisode.date);
+                newEpisode.date.date += 7;
+            }
+
+            episodePM.open(newEpisode, true);
+        }
+
+        private function itemDoubleClick(event:MouseEvent, item:Object):void {
+            episodePM.open(item);
         }
         ]]>
 	</fx:Script>
@@ -109,26 +137,27 @@
                 </s:Scroller>
             </s:NavigatorContent>
 
-            <s:NavigatorContent width="100%" height="100%" label="{resourceManager.getString('component', 'episodes')}">
+            <s:NavigatorContent width="100%" height="100%" label="{resourceManager.getString('component', 'serial.episodes')}">
                 <s:VGroup width="100%" height="100%"
                           paddingLeft="5" paddingRight="5" paddingBottom="5" paddingTop="5">
                     <s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right">
                         <s:Button width="100" label="{resourceManager.getString('component', 'add')}"
-                                  click="{episodePM.open()}"/>
+                                  click="{createEpisode()}"/>
                         <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
                                   click="{episodePM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
                         <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
                                   click="{model.removeEpisode(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
                     </s:HGroup>
-                    <s:DataGrid id="dg" width="100%" height="100%"
-                                dataProvider="{model.serial.episodes}">
+                    <s:DataGrid id="dg" width="100%" height="100%" dataProvider="{model.serial.episodes}"
+                                doubleClickEnabled="true" doubleClickMode="row"
+                                doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}">
                         <s:columns>
                             <s:ArrayList>
                                 <s:GridColumn dataField="number"
                                               headerText="{resourceManager.getString('component', 'episode.number')}"/>
                                 <s:GridColumn dataField="status" labelFunction="{LabelUtil.getEnumLabelFunction(EpisodeStatus)}"
                                               headerText="{resourceManager.getString('component', 'episode.status')}"/>
-                                <s:GridColumn dataField="date" formatter="{dateFromatter}"
+                                <s:GridColumn dataField="date" formatter="{dtFormatter}"
                                               headerText="{resourceManager.getString('component', 'episode.date')}"/>
                             </s:ArrayList>
                         </s:columns>

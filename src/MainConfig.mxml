@@ -20,14 +20,21 @@
                 <parsley:Property name="aStream" typeRef="{AStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AppEvent.UPDATE}" messageType="{AppEvent}">
+            <parsley:Command type="{UpdateAppCommand}">
+            </parsley:Command>
+        </parsley:MapCommand>
     </fx:Declarations>
 
     <fx:Script><![CDATA[
         import ru.kokorin.astream.AStream;
         import ru.kokorin.dubmanager.command.LoadSerialsCommand;
         import ru.kokorin.dubmanager.command.SaveSerialsCommand;
+        import ru.kokorin.dubmanager.command.UpdateAppCommand;
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
         import ru.kokorin.dubmanager.domain.Serial;
+        import ru.kokorin.dubmanager.event.AppEvent;
         import ru.kokorin.dubmanager.event.SerialEvent;
 
         public var aStream:AStream = function ():AStream {

@@ -3,7 +3,7 @@
          xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:serial="ru.kokorin.dubmanager.component.serial.*"
          xmlns:parsley="http://www.spicefactory.org/parsley"
-         xmlns:popup="ru.kokorin.component.*"
+         xmlns:popup="ru.kokorin.component.*" xmlns:display="flash.display.*"
          creationComplete="{onCC()}">
     <fx:Declarations>
         <serial:SerialPM id="serialPM"
@@ -17,6 +17,23 @@
             </parsley:behaviors>
             <serial:SerialView model="{serialPM}"/>
         </parsley:PopUp>
+
+        <s:DateTimeFormatter id="dtFormatter" dateStyle="long" timeStyle="none"/>
+
+        <display:NativeMenu id="rightClickMenu">
+            <display:items>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'edit')}"
+                                        select="{serialPM.open(dg.selectedItem)}"/>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'remove')}"
+                                        select="{askRemove(dg.selectedItem as Serial)}"/>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'serial.videoURL')}"
+                                        enabled="{isHttpUrl((dg.selectedItem as Serial).videoURL)}"
+                                        select="{openVideo(dg.selectedItem as Serial)}"/>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'serial.subtitleURL')}"
+                                        enabled="{isHttpUrl((dg.selectedItem as Serial).subtitleURL)}"
+                                        select="{openSubtitles(dg.selectedItem as Serial)}"/>
+            </display:items>
+        </display:NativeMenu>
     </fx:Declarations>
     <fx:Script><![CDATA[
         import mx.events.CloseEvent;
@@ -26,25 +43,35 @@
         import ru.kokorin.dubmanager.domain.Serial;
         import ru.kokorin.dubmanager.domain.SerialStatus;
         import ru.kokorin.dubmanager.domain.SerialType;
+        import ru.kokorin.dubmanager.event.SerialEvent;
         import ru.kokorin.util.LabelUtil;
+        import ru.kokorin.util.RendererUtil;
 
         import spark.components.Alert;
 
-        [Bindable]
-        public var model:WorkspacePM;
+        private var _model:WorkspacePM;
 
-        private function openVideo(serial:Serial):void {
-            if (serial && serial.videoURL) {
-                var urlReq:URLRequest = new URLRequest(serial.videoURL);
-                navigateToURL(urlReq, "_blank");
+        private function onCC():void {
+            setInterval(dg.invalidateDisplayList, 15 * 60 * 1000);
+        }
+
+        [Bindable]
+        public function get model():WorkspacePM {
+            return _model;
+        }
+
+        public function set model(value:WorkspacePM):void {
+            if (_model) {
+                _model.removeEventListener(SerialEvent.SAVE, onModelSave);
+            }
+            _model = value;
+            if (_model) {
+                _model.addEventListener(SerialEvent.SAVE, onModelSave);
             }
         }
 
-        private function openSubtitles(serial:Serial):void {
-            if (serial && serial.subtitleURL) {
-                var urlReq:URLRequest = new URLRequest(serial.subtitleURL);
-                navigateToURL(urlReq, "_blank");
-            }
+        private function onModelSave(event:Event):void {
+            dg.invalidateDisplayList();
         }
 
         private function askRemove(serial:Serial):void {
@@ -57,12 +84,17 @@
             });
         }
 
-        private function onCC():void {
-            setInterval(dg.invalidateDisplayList, 15*60*1000);
+        private function itemRightClick(event:MouseEvent, item:Object):void {
+            dg.selectedItem = item;
+            rightClickMenu.display(stage, event.stageX, event.stageY);
         }
 
-        private function progressLabelFunction(serial:Serial, column:GridColumn):String {
-            if (serial.status == SerialStatus.IN_PROCESS) {
+        private function itemDoubleClick(event:MouseEvent, item:Object):void {
+            serialPM.open(item);
+        }
+
+        private static function completeEpisodeCountLabelFunction(serial:Serial, column:Object = null):String {
+            if (serial && serial.status == SerialStatus.IN_PROCESS) {
                 var current:Number = 0;
                 for each(var episode:Episode in serial.episodes) {
                     //Looking for latest completed episode
@@ -73,6 +105,65 @@
                 return current + "/" + serial.episodesCount;
             }
             return "";
+        }
+
+        private static function nextDateLabelFunction(serial:Serial, column:GridColumn):String {
+            const date:Date = getNextDate(serial);
+            if (date) {
+                if (column.formatter) {
+                    return column.formatter.format(date);
+                }
+                return String(date);
+            }
+            return "";
+        }
+
+        private static function nextDateCompare(serial1:Serial, serial2:Serial, column:GridColumn):int {
+            const date1:Date = getNextDate(serial1);
+            const date2:Date = getNextDate(serial2);
+            const time1:Number = date1 ? date1.time : 0;
+            const time2:Number = date2 ? date2.time : 0;
+            if (time1 < time2) {
+                return -1;
+            }
+            if (time1 == time2) {
+                return 0;
+            }
+            return 1;
+        }
+
+        private static function getNextDate(serial:Serial):Date {
+            var result:Episode = null;
+            if (serial && serial.status == SerialStatus.IN_PROCESS) {
+                for each(var episode:Episode in serial.episodes) {
+                    //Looking for newest not_started episode
+                    if (episode.status == EpisodeStatus.NOT_STARTED && (!result || result.number > episode.number)) {
+                        result = episode;
+                    }
+                }
+            }
+            if (result) {
+                return result.date;
+            }
+            return null;
+        }
+
+        private static function isHttpUrl(value:String):Boolean {
+            return value != null && value.indexOf("http") == 0;
+        }
+
+        private static function openVideo(serial:Serial):void {
+            if (serial && serial.videoURL) {
+                var urlReq:URLRequest = new URLRequest(serial.videoURL);
+                navigateToURL(urlReq, "_blank");
+            }
+        }
+
+        private static function openSubtitles(serial:Serial):void {
+            if (serial && serial.subtitleURL) {
+                var urlReq:URLRequest = new URLRequest(serial.subtitleURL);
+                navigateToURL(urlReq, "_blank");
+            }
         }
         ]]>
     </fx:Script>
@@ -88,36 +179,34 @@
                   click="{serialPM.open()}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
                   click="{serialPM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
-        <s:Button width="100" label="Видео"
-                  click="{openVideo(dg.selectedItem as Serial)}" enabled="{dg.selectedItem}"/>
-        <s:Button width="100" label="Субтитры"
-                  click="{openSubtitles(dg.selectedItem as Serial)}"
-                  enabled="{dg.selectedItem}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
                   click="{askRemove(dg.selectedItem as Serial)}" enabled="{dg.selectedItem}"/>
     </s:HGroup>
-    <!--TODO double click, context menu-->
+
     <s:DataGrid id="dg" width="100%" height="100%"
                 dataProvider="{model.serials}"
                 itemRenderer="ru.kokorin.dubmanager.renderer.SerialGridRenderer"
+                doubleClickEnabled="true" doubleClickMode="row"
+                doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}"
+                rightMouseDown="{RendererUtil.onRenderer(event, itemRightClick)}"
                 resizableColumns="true">
         <s:columns>
             <s:ArrayList>
                 <s:GridColumn dataField="name" percentWidth="40" showDataTips="{true}"
                               headerText="{resourceManager.getString('component', 'serial.name')}"/>
-                <s:GridColumn dataField="type" width="100"
+                <s:GridColumn dataField="type" width="80"
                               headerText="{resourceManager.getString('component', 'serial.type')}"
                               labelFunction="{LabelUtil.getEnumLabelFunction(SerialType)}"/>
-                <s:GridColumn dataField="status" width="150"
+                <s:GridColumn dataField="status" width="100"
                               headerText="{resourceManager.getString('component', 'serial.status')}"
                               labelFunction="{LabelUtil.getEnumLabelFunction(SerialStatus)}"/>
                 <s:GridColumn width="100" sortable="false"
-                              headerText="{resourceManager.getString('component', 'serial.episode')}"
-                              labelFunction="{progressLabelFunction}"/>
-                <!--<s:GridColumn dataField="nextDate" width="170" headerText="Дата"
-                              itemRendererFunction="{itemRendererFunction}"
-                              formatter="{dateFromatter}"
-                              sortCompareFunction="{compareDateFunction}"/>-->
+                              headerText="{resourceManager.getString('component', 'serial.completeEpisodeCount')}"
+                              labelFunction="{completeEpisodeCountLabelFunction}"/>
+                <s:GridColumn width="120" formatter="{dtFormatter}"
+                              headerText="{resourceManager.getString('component', 'serial.nextEpisodeDate')}"
+                              labelFunction="{nextDateLabelFunction}"
+                              sortCompareFunction="{nextDateCompare}"/>
                 <s:GridColumn dataField="comment" percentWidth="60" showDataTips="true"
                               headerText="{resourceManager.getString('component', 'serial.comment')}"/>
             </s:ArrayList>

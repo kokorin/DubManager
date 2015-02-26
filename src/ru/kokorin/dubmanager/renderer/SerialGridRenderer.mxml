@@ -22,12 +22,14 @@
         import ru.kokorin.dubmanager.domain.Serial;
         import ru.kokorin.dubmanager.domain.SerialStatus;
 
-        /*private static const OVERDUE:uint = 0xf1aa9f;
-        private static const WARN:uint = 0xf2f9b9;
-        private static const NORMAL:uint = 0x000000ff;*/
+        override public function set data(value:Object):void {
+            super.data = value;
+            setCurrentState(getCurrentRendererState(), false);
+        }
 
         override protected function getCurrentRendererState():String {
-            var stateExtension:String = "";
+            var result:String = super.getCurrentRendererState();
+
             const serial:Serial = data as Serial;
             if (serial && serial.status == SerialStatus.IN_PROCESS) {
                 var nextEp:Date = new Date(2100, 0, 1);
@@ -46,13 +48,13 @@
                 weekAgo.date -= 7;
 
                 if (nextEp.time < weekAgo.time) {
-                    stateExtension = "Overdue";
+                    result += "Overdue";
                 } else if (nextEp.time < today.time) {
-                    stateExtension = "Warn";
+                    result += "Warn";
                 }
             }
 
-            return super.getCurrentRendererState() + stateExtension;
+            return result;
         }
         ]]>
     </fx:Script>
@@ -61,6 +63,6 @@
             <s:SolidColor color.overdue="red" color.warn="yellow" alpha="0.2"/>
         </s:fill>
     </s:Rect>
-    <s:Label id="labelDisplay" top="4" bottom="4" left="4" right="4"
+    <s:Label id="labelDisplay" top="10" bottom="10" left="10" right="10"
              verticalAlign="middle" lineBreak="explicit"/>
 </s:GridItemRenderer>

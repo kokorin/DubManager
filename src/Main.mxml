@@ -3,12 +3,14 @@
                        xmlns:s="library://ns.adobe.com/flex/spark"
                        xmlns:parsley="http://www.spicefactory.org/parsley"
                        xmlns:workspace="ru.kokorin.dubmanager.component.workspace.*"
+                       creationComplete="{onCreationComplete(event)}"
                        width="800" height="600">
     <fx:Metadata>
         [ResourceBundle("SerialType")]
         [ResourceBundle("SerialStatus")]
         [ResourceBundle("EpisodeStatus")]
         [ResourceBundle("component")]
+        [ResourceBundle("alert")]
     </fx:Metadata>
 
     <fx:Style source="style.css"/>
@@ -26,15 +28,22 @@
     </fx:Declarations>
     <fx:Script>
 		<![CDATA[
+        import flash.globalization.LocaleID;
+
         import org.spicefactory.parsley.flex.tag.builder.FlexContextEvent;
 
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
+        import ru.kokorin.dubmanager.event.AppEvent;
         import ru.kokorin.dubmanager.event.SerialEvent;
 
         private function onContextComplete(event:FlexContextEvent):void {
             event.context.scopeManager.dispatchMessage(new SerialEvent(SerialEvent.LOAD));
-            //TODO initialize loading of Serial's
-            //TODO initialize update schedule
+            event.context.scopeManager.dispatchMessage(new AppEvent(AppEvent.UPDATE));
+            //TODO preserve sort order
+        }
+
+        private function onCreationComplete(event:Event):void {
+            this.setStyle("locale", LocaleID.DEFAULT);
         }
 
         [Bindable]

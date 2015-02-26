@@ -31,7 +31,7 @@ public class WorkspacePM extends EventDispatcher {
 
     public function removeSerial(episode:Object):void {
         const index:int = serials.getItemIndex(episode);
-        if (index == -1) {
+        if (index != -1) {
             serials.removeItemAt(index);
         }
         save();

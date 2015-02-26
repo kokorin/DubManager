@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:cairngorm="http://ns.adobe.com/cairngorm"
+         xmlns:util="ru.kokorin.util.*"
          show="{setFocus()}">
     <fx:Declarations>
-        <cairngorm:ChangeTracker id="changeTracker" target="{model.item as IEventDispatcher}"
-                    changeEvents="{[[PropertyChangeEvent.PROPERTY_CHANGE, CollectionEvent.COLLECTION_CHANGE]]}"/>
+        <util:ChangeTracker id="changeTracker" target="{model.item as IEventDispatcher}"/>
     </fx:Declarations>
     <fx:Script>
 		<![CDATA[
         import mx.events.CloseEvent;
-        import mx.events.CollectionEvent;
-        import mx.events.PropertyChangeEvent;
         import mx.events.ValidationResultEvent;
         import mx.logging.ILogger;
         import mx.validators.Validator;
@@ -60,8 +57,9 @@
         private function close():void {
             if (changeTracker.changed) {
                 LOGGER.info("Detected model change, asking to confirm close");
-                Alert.show("Are you sure you want to close dialog? Unsaved data will be lost.", "Attention",
-                        Alert.YES | Alert.CANCEL, this, doClose);
+                var title:String = resourceManager.getString("component", "cancel.title");
+                var question:String = resourceManager.getString("component", "cancel.question");
+                Alert.show(question, title, Alert.YES | Alert.CANCEL, this, doClose);
             } else {
                 doClose();
             }
