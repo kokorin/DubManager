@@ -13,8 +13,8 @@ import ru.kokorin.util.LogUtil;
 
 [Event(name="open", type="flash.events.Event")]
 [Event(name="close", type="flash.events.Event")]
-[Event(name="save", type="ru.kokorin.component.SaveEvent")]
-public class BasePM extends EventDispatcher {
+[Event(name="save", type="ru.kokorin.component.EditEvent")]
+public class EditPM extends EventDispatcher {
     private var itemClazz:Class;
     private var _item:Object;
     private var _original:Object;
@@ -22,7 +22,7 @@ public class BasePM extends EventDispatcher {
 
     protected const LOGGER:ILogger = LogUtil.getLogger(this);
 
-    public function BasePM(itemClazz:Class) {
+    public function EditPM(itemClazz:Class) {
         this.itemClazz = itemClazz;
     }
 
@@ -57,7 +57,7 @@ public class BasePM extends EventDispatcher {
     }
 
     public function save():void {
-        const event:SaveEvent = new SaveEvent(SaveEvent.SAVE);
+        const event:EditEvent = new EditEvent(EditEvent.SAVE);
         event.item = _item;
         event.original = _original;
         dispatchEvent(event);

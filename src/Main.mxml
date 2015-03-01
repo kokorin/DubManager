@@ -6,8 +6,8 @@
                        creationComplete="{onCreationComplete(event)}"
                        width="800" height="600">
     <fx:Metadata>
-        [ResourceBundle("SerialType")]
-        [ResourceBundle("SerialStatus")]
+        [ResourceBundle("AnimeType")]
+        [ResourceBundle("AnimeStatus")]
         [ResourceBundle("EpisodeStatus")]
         [ResourceBundle("component")]
         [ResourceBundle("alert")]
@@ -34,10 +34,11 @@
 
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
         import ru.kokorin.dubmanager.event.AppEvent;
-        import ru.kokorin.dubmanager.event.SerialEvent;
+        import ru.kokorin.dubmanager.event.AnimeEvent;
 
         private function onContextComplete(event:FlexContextEvent):void {
-            event.context.scopeManager.dispatchMessage(new SerialEvent(SerialEvent.LOAD));
+            event.context.scopeManager.dispatchMessage(new AnimeEvent(AnimeEvent.LOAD_DATA));
+            //event.context.scopeManager.dispatchMessage(new AnimeEvent(AnimeEvent.LOAD_TITLES));
             event.context.scopeManager.dispatchMessage(new AppEvent(AppEvent.UPDATE));
             //TODO preserve sort order
         }

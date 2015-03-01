@@ -1,21 +1,39 @@
 <?xml version="1.0"?>
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:serial="ru.kokorin.dubmanager.component.serial.*"
+         xmlns:serial="ru.kokorin.dubmanager.component.anime.*"
          xmlns:parsley="http://www.spicefactory.org/parsley"
          xmlns:popup="ru.kokorin.component.*" xmlns:display="flash.display.*"
          creationComplete="{onCC()}">
     <fx:Declarations>
-        <serial:SerialPM id="serialPM"
-                         save="{model.saveSerial(event.item, event.original)}"/>
+        <parsley:FastInject>
+            <parsley:injectionComplete><![CDATA[
+                    animeSelectPM.addEventListener(SelectEvent.SELECT, function (event:SelectEvent):void {
+                        animePM.open(event.item, true);
+                    });
+                ]]></parsley:injectionComplete>
+            <parsley:Inject property="animeSelectPM" type="{AnimeSelectPM}"/>
+        </parsley:FastInject>
 
-        <parsley:PopUp open="{serialPM.isOpen}" modal="true" reuse="true">
+        <serial:AnimePM id="animePM"
+                        save="{model.saveAnime(event.item, event.original)}"/>
+
+        <parsley:PopUp open="{animePM.isOpen}" modal="true" reuse="true">
             <parsley:behaviors>
                 <fx:Array>
                     <popup:KeepMaxSizeBehavior/>
                 </fx:Array>
             </parsley:behaviors>
-            <serial:SerialView model="{serialPM}"/>
+            <serial:AnimeView model="{animePM}"/>
+        </parsley:PopUp>
+
+        <parsley:PopUp open="{animeSelectPM.isOpen}" modal="true" reuse="true">
+            <parsley:behaviors>
+                <fx:Array>
+                    <popup:KeepMaxSizeBehavior/>
+                </fx:Array>
+            </parsley:behaviors>
+            <serial:AnimeSelectView model="{animeSelectPM}"/>
         </parsley:PopUp>
 
         <s:DateTimeFormatter id="dtFormatter" dateStyle="long" timeStyle="none"/>
@@ -23,31 +41,37 @@
         <display:NativeMenu id="rightClickMenu">
             <display:items>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'edit')}"
-                                        select="{serialPM.open(dg.selectedItem)}"/>
+                                        select="{animePM.open(dg.selectedItem)}"/>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.videoURL')}"
+                                        enabled="{isHttpUrl((dg.selectedItem as Anime).videoURL)}"
+                                        select="{openVideo(dg.selectedItem as Anime)}"/>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.subtitleURL')}"
+                                        enabled="{isHttpUrl((dg.selectedItem as Anime).subtitleURL)}"
+                                        select="{openSubtitles(dg.selectedItem as Anime)}"/>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'remove')}"
-                                        select="{askRemove(dg.selectedItem as Serial)}"/>
-                <display:NativeMenuItem label="{resourceManager.getString('component', 'serial.videoURL')}"
-                                        enabled="{isHttpUrl((dg.selectedItem as Serial).videoURL)}"
-                                        select="{openVideo(dg.selectedItem as Serial)}"/>
-                <display:NativeMenuItem label="{resourceManager.getString('component', 'serial.subtitleURL')}"
-                                        enabled="{isHttpUrl((dg.selectedItem as Serial).subtitleURL)}"
-                                        select="{openSubtitles(dg.selectedItem as Serial)}"/>
+                                        select="{askRemove(dg.selectedItem as Anime)}"/>
             </display:items>
         </display:NativeMenu>
     </fx:Declarations>
+
     <fx:Script><![CDATA[
         import mx.events.CloseEvent;
 
+        import ru.kokorin.component.SelectEvent;
+
+        import ru.kokorin.dubmanager.component.anime.AnimeSelectPM;
+
+        import ru.kokorin.dubmanager.domain.Anime;
+        import ru.kokorin.dubmanager.domain.AnimeStatus;
         import ru.kokorin.dubmanager.domain.Episode;
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
-        import ru.kokorin.dubmanager.domain.Serial;
-        import ru.kokorin.dubmanager.domain.SerialStatus;
-        import ru.kokorin.dubmanager.domain.SerialType;
-        import ru.kokorin.dubmanager.event.SerialEvent;
         import ru.kokorin.util.LabelUtil;
         import ru.kokorin.util.RendererUtil;
 
         import spark.components.Alert;
+
+        [Bindable]
+        public var animeSelectPM:AnimeSelectPM;
 
         private var _model:WorkspacePM;
 
@@ -61,25 +85,17 @@
         }
 
         public function set model(value:WorkspacePM):void {
-            if (_model) {
-                _model.removeEventListener(SerialEvent.SAVE, onModelSave);
-            }
             _model = value;
-            if (_model) {
-                _model.addEventListener(SerialEvent.SAVE, onModelSave);
-            }
         }
 
-        private function onModelSave(event:Event):void {
-            dg.invalidateDisplayList();
-        }
 
-        private function askRemove(serial:Serial):void {
-            const title:String = resourceManager.getString('component', 'serial.removeTitle');
-            const question:String = resourceManager.getString('component', 'serial.removeQuestion', [serial.name]);
+        private function askRemove(anime:Anime):void {
+            const name:String = LabelUtil.getTitle(anime.titles);
+            const title:String = resourceManager.getString('component', 'anime.removeTitle');
+            const question:String = resourceManager.getString('component', 'anime.removeQuestion', [name]);
             Alert.show(question, title, Alert.YES | Alert.NO, null, function (event:CloseEvent):void {
                 if (event.detail == Alert.YES) {
-                    model.removeSerial(serial);
+                    model.removeAnime(anime);
                 }
             });
         }
@@ -90,25 +106,26 @@
         }
 
         private function itemDoubleClick(event:MouseEvent, item:Object):void {
-            serialPM.open(item);
+            animePM.open(item);
         }
 
-        private static function completeEpisodeCountLabelFunction(serial:Serial, column:Object = null):String {
-            if (serial && serial.status == SerialStatus.IN_PROCESS) {
+        private static function completeEpisodeCountLabelFunction(aniDub:Anime, column:Object = null):String {
+            if (aniDub && aniDub.status == AnimeStatus.IN_PROCESS) {
                 var current:Number = 0;
-                for each(var episode:Episode in serial.episodes) {
+                for each(var episode:Episode in aniDub.episodes) {
+                    var epNumber:Number = parseInt(episode.number);
                     //Looking for latest completed episode
-                    if (episode.status == EpisodeStatus.COMPLETE && current < episode.number) {
-                        current = episode.number;
+                    if (episode.status == EpisodeStatus.COMPLETE && current < epNumber) {
+                        current = epNumber;
                     }
                 }
-                return current + "/" + serial.episodesCount;
+                return current + "/" + aniDub.episodeCount;
             }
             return "";
         }
 
-        private static function nextDateLabelFunction(serial:Serial, column:GridColumn):String {
-            const date:Date = getNextDate(serial);
+        private static function nextDateLabelFunction(aniDub:Anime, column:GridColumn):String {
+            const date:Date = getNextDate(aniDub);
             if (date) {
                 if (column.formatter) {
                     return column.formatter.format(date);
@@ -118,9 +135,9 @@
             return "";
         }
 
-        private static function nextDateCompare(serial1:Serial, serial2:Serial, column:GridColumn):int {
-            const date1:Date = getNextDate(serial1);
-            const date2:Date = getNextDate(serial2);
+        private static function nextDateCompare(aniDub1:Anime, aniDub2:Anime, column:GridColumn):int {
+            const date1:Date = getNextDate(aniDub1);
+            const date2:Date = getNextDate(aniDub2);
             const time1:Number = date1 ? date1.time : 0;
             const time2:Number = date2 ? date2.time : 0;
             if (time1 < time2) {
@@ -132,18 +149,18 @@
             return 1;
         }
 
-        private static function getNextDate(serial:Serial):Date {
+        private static function getNextDate(anime:Anime):Date {
             var result:Episode = null;
-            if (serial && serial.status == SerialStatus.IN_PROCESS) {
-                for each(var episode:Episode in serial.episodes) {
+            if (anime && anime.status == AnimeStatus.IN_PROCESS) {
+                for each(var epiDub:Episode in anime.episodes) {
                     //Looking for newest not_started episode
-                    if (episode.status == EpisodeStatus.NOT_STARTED && (!result || result.number > episode.number)) {
-                        result = episode;
+                    if (epiDub.status == EpisodeStatus.NOT_STARTED && (!result || result.number > epiDub.number)) {
+                        result = epiDub;
                     }
                 }
             }
             if (result) {
-                return result.date;
+                return result.airDate;
             }
             return null;
         }
@@ -152,14 +169,14 @@
             return value != null && value.indexOf("http") == 0;
         }
 
-        private static function openVideo(serial:Serial):void {
+        private static function openVideo(serial:Anime):void {
             if (serial && serial.videoURL) {
                 var urlReq:URLRequest = new URLRequest(serial.videoURL);
                 navigateToURL(urlReq, "_blank");
             }
         }
 
-        private static function openSubtitles(serial:Serial):void {
+        private static function openSubtitles(serial:Anime):void {
             if (serial && serial.subtitleURL) {
                 var urlReq:URLRequest = new URLRequest(serial.subtitleURL);
                 navigateToURL(urlReq, "_blank");
@@ -174,41 +191,42 @@
 
     <s:HGroup width="100%" verticalAlign="middle" paddingLeft="5" paddingRight="5" paddingTop="2" paddingBottom="2">
         <s:Label width="100%" styleName="caption"
-                 text="{resourceManager.getString('component', 'serials')}"/>
+                 text="{resourceManager.getString('component', 'animeList')}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'add')}"
-                  click="{serialPM.open()}"/>
+                  click="{animeSelectPM.open()}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
-                  click="{serialPM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
+                  click="{animePM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
-                  click="{askRemove(dg.selectedItem as Serial)}" enabled="{dg.selectedItem}"/>
+                  click="{askRemove(dg.selectedItem as Anime)}" enabled="{dg.selectedItem}"/>
     </s:HGroup>
 
     <s:DataGrid id="dg" width="100%" height="100%"
-                dataProvider="{model.serials}"
-                itemRenderer="ru.kokorin.dubmanager.renderer.SerialGridRenderer"
+                dataProvider="{model.animeList}"
+                itemRenderer="ru.kokorin.dubmanager.renderer.AnimeGridRenderer"
                 doubleClickEnabled="true" doubleClickMode="row"
                 doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}"
                 rightMouseDown="{RendererUtil.onRenderer(event, itemRightClick)}"
                 resizableColumns="true">
         <s:columns>
             <s:ArrayList>
-                <s:GridColumn dataField="name" percentWidth="40" showDataTips="{true}"
-                              headerText="{resourceManager.getString('component', 'serial.name')}"/>
+                <s:GridColumn dataField="titles" percentWidth="40" showDataTips="{true}"
+                              headerText="{resourceManager.getString('component', 'anime.name')}"
+                              labelFunction="{LabelUtil.getTitle}"/>
                 <s:GridColumn dataField="type" width="80"
-                              headerText="{resourceManager.getString('component', 'serial.type')}"
-                              labelFunction="{LabelUtil.getEnumLabelFunction(SerialType)}"/>
+                              headerText="{resourceManager.getString('component', 'anime.type')}"
+                              labelFunction="{LabelUtil.getEnumLabel}"/>
                 <s:GridColumn dataField="status" width="100"
-                              headerText="{resourceManager.getString('component', 'serial.status')}"
-                              labelFunction="{LabelUtil.getEnumLabelFunction(SerialStatus)}"/>
+                              headerText="{resourceManager.getString('component', 'anime.status')}"
+                              labelFunction="{LabelUtil.getEnumLabel}"/>
                 <s:GridColumn width="100" sortable="false"
-                              headerText="{resourceManager.getString('component', 'serial.completeEpisodeCount')}"
+                              headerText="{resourceManager.getString('component', 'anime.completeEpisodeCount')}"
                               labelFunction="{completeEpisodeCountLabelFunction}"/>
                 <s:GridColumn width="120" formatter="{dtFormatter}"
-                              headerText="{resourceManager.getString('component', 'serial.nextEpisodeDate')}"
+                              headerText="{resourceManager.getString('component', 'anime.nextEpisodeDate')}"
                               labelFunction="{nextDateLabelFunction}"
                               sortCompareFunction="{nextDateCompare}"/>
                 <s:GridColumn dataField="comment" percentWidth="60" showDataTips="true"
-                              headerText="{resourceManager.getString('component', 'serial.comment')}"/>
+                              headerText="{resourceManager.getString('component', 'anime.comment')}"/>
             </s:ArrayList>
         </s:columns>
     </s:DataGrid>

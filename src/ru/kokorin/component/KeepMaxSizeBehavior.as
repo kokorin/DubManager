@@ -31,7 +31,8 @@ package ru.kokorin.component
 			}
 			base.addEventListener(PopUpEvent.CLOSING, onClosing);
 		}
-		
+
+        //TODO add timeout
 		private function onStageResize(event:Event = null):void{
 			popup.width = Math.min(popup.stage.stageWidth - 2*PADDING, popup.maxWidth);
 			popup.height = Math.min(popup.stage.stageHeight - 2*PADDING, popup.maxHeight);

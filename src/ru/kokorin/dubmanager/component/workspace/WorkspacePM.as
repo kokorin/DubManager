@@ -4,42 +4,42 @@ import flash.events.EventDispatcher;
 
 import org.apache.flex.collections.VectorCollection;
 
-import ru.kokorin.dubmanager.domain.Serial;
-import ru.kokorin.dubmanager.event.SerialEvent;
+import ru.kokorin.dubmanager.domain.Anime;
+import ru.kokorin.dubmanager.event.AnimeEvent;
 
-[Event(name="save", type="ru.kokorin.dubmanager.event.SerialEvent")]
+[Event(name="saveData", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 public class WorkspacePM extends EventDispatcher {
     [Bindable]
-    public var serials:VectorCollection;
+    public var animeList:VectorCollection;
 
-    public function onLoadResult(result:Vector.<Serial>, event:Event):void {
+    public function onLoadResult(result:Vector.<Anime>, event:Event):void {
         if (!result) {
-            result = new Vector.<Serial>();
+            result = new Vector.<Anime>();
         }
-        serials = new VectorCollection(result);
+        animeList = new VectorCollection(result);
     }
 
-    public function saveSerial(serial:Object, original:Object):void {
-        const index:int = serials.getItemIndex(original);
+    public function saveAnime(anime:Object, original:Object):void {
+        const index:int = animeList.getItemIndex(original);
         if (index == -1) {
-            serials.addItem(serial);
+            animeList.addItem(anime);
         } else {
-            serials.setItemAt(serial, index);
+            animeList.setItemAt(anime, index);
         }
-        save();
+        saveData();
     }
 
-    public function removeSerial(episode:Object):void {
-        const index:int = serials.getItemIndex(episode);
+    public function removeAnime(anime:Object):void {
+        const index:int = animeList.getItemIndex(anime);
         if (index != -1) {
-            serials.removeItemAt(index);
+            animeList.removeItemAt(index);
         }
-        save();
+        saveData();
     }
 
-    private function save():void {
-        const event:SerialEvent = new SerialEvent(SerialEvent.SAVE);
-        event.serials = serials.source as Vector.<Serial>;
+    private function saveData():void {
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.SAVE_DATA);
+        event.animeList = animeList.source as Vector.<Anime>;
         dispatchEvent(event);
     }
 }

@@ -20,14 +20,14 @@
         public var validators:Array;
 
         [Bindable]
-        private var model:BasePM;
+        private var model:EditPM;
         protected const LOGGER:ILogger = LogUtil.getLogger(this);
 
-        protected function getModel():BasePM {
+        protected function getModel():EditPM {
             return model;
         }
 
-        protected function setModel(value:BasePM):void {
+        protected function setModel(value:EditPM):void {
             if (model !== value) {
                 if (model) {
                     model.removeEventListener(Event.CLOSE, onModelClose);

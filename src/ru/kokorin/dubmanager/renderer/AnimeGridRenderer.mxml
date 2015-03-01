@@ -17,10 +17,10 @@
     </s:states>
     <fx:Script>
         <![CDATA[
+        import ru.kokorin.dubmanager.domain.Anime;
+        import ru.kokorin.dubmanager.domain.AnimeStatus;
         import ru.kokorin.dubmanager.domain.Episode;
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
-        import ru.kokorin.dubmanager.domain.Serial;
-        import ru.kokorin.dubmanager.domain.SerialStatus;
 
         override public function set data(value:Object):void {
             super.data = value;
@@ -30,13 +30,13 @@
         override protected function getCurrentRendererState():String {
             var result:String = super.getCurrentRendererState();
 
-            const serial:Serial = data as Serial;
-            if (serial && serial.status == SerialStatus.IN_PROCESS) {
+            const anime:Anime = data as Anime;
+            if (anime && anime.status == AnimeStatus.IN_PROCESS) {
                 var nextEp:Date = new Date(2100, 0, 1);
-                for each(var episode:Episode in serial.episodes) {
+                for each(var episode:Episode in anime.episodes) {
                     //Looking for latest completed episode
-                    if (episode.status == EpisodeStatus.NOT_STARTED && episode.date && episode.date.time < nextEp.time) {
-                        nextEp = episode.date;
+                    if (episode.status == EpisodeStatus.NOT_STARTED && episode.airDate && episode.airDate.time < nextEp.time) {
+                        nextEp = episode.airDate;
                     }
                 }
 

@@ -3,21 +3,46 @@
            xmlns:parsley="http://www.spicefactory.org/parsley">
     <fx:Declarations>
         <parsley:Object type="{WorkspacePM}">
-            <parsley:ManagedEvents names="{[SerialEvent.SAVE]}"/>
+            <parsley:ManagedEvents names="{[AnimeEvent.SAVE_DATA]}"/>
 
-            <parsley:CommandResult selector="{SerialEvent.LOAD}" type="{SerialEvent}"
+            <parsley:CommandResult selector="{AnimeEvent.LOAD_DATA}" type="{AnimeEvent}"
                                    method="onLoadResult"/>
         </parsley:Object>
 
-        <parsley:MapCommand selector="{SerialEvent.LOAD}" messageType="{SerialEvent}">
-            <parsley:Command type="{LoadSerialsCommand}">
-                <parsley:Property name="aStream" typeRef="{AStream}"/>
+        <parsley:Object type="{AnimeSelectPM}">
+            <parsley:ManagedEvents names="{[AnimeEvent.LOAD_TITLES]}"/>
+
+            <parsley:CommandResult selector="{AnimeEvent.LOAD_TITLES}" type="{AnimeEvent}"
+                                   method="onLoadTitlesResult"/>
+        </parsley:Object>
+
+        <parsley:MapCommand selector="{AnimeEvent.LOAD_DATA}" messageType="{AnimeEvent}">
+            <parsley:Command type="{LoadDataCommand}">
+                <parsley:Property name="aStream" value="{aStreamData}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
-        <parsley:MapCommand selector="{SerialEvent.SAVE}" messageType="{SerialEvent}">
-            <parsley:Command type="{SaveSerialsCommand}">
-                <parsley:Property name="aStream" typeRef="{AStream}"/>
+        <parsley:MapCommand selector="{AnimeEvent.SAVE_DATA}" messageType="{AnimeEvent}">
+            <parsley:Command type="{SaveDataCommand}">
+                <parsley:Property name="aStream" value="{aStreamData}"/>
+            </parsley:Command>
+        </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AnimeEvent.LOAD_TITLES}" messageType="{AnimeEvent}">
+            <parsley:Command type="{LoadAnimeTitlesCommand}">
+                <parsley:Property name="aStream" value="{aStreamTitles}"/>
+            </parsley:Command>
+        </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AnimeEvent.LOAD_LIST}" messageType="{AnimeEvent}">
+            <parsley:Command type="{LoadAnimeListCommand}">
+                <parsley:Property name="aStream" value="{aStreamData}"/>
+            </parsley:Command>
+        </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AnimeEvent.LOAD}" messageType="{AnimeEvent}">
+            <parsley:Command type="{LoadAnimeCommand}">
+                <parsley:Property name="aStream" value="{aStreamData}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
@@ -29,18 +54,36 @@
 
     <fx:Script><![CDATA[
         import ru.kokorin.astream.AStream;
-        import ru.kokorin.dubmanager.command.LoadSerialsCommand;
-        import ru.kokorin.dubmanager.command.SaveSerialsCommand;
+        import ru.kokorin.astream.AStreamMode;
+        import ru.kokorin.dubmanager.command.LoadAnimeCommand;
+        import ru.kokorin.dubmanager.command.LoadAnimeListCommand;
+        import ru.kokorin.dubmanager.command.LoadAnimeTitlesCommand;
+        import ru.kokorin.dubmanager.command.LoadDataCommand;
+        import ru.kokorin.dubmanager.command.SaveDataCommand;
         import ru.kokorin.dubmanager.command.UpdateAppCommand;
+        import ru.kokorin.dubmanager.component.anime.AnimeSelectPM;
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
-        import ru.kokorin.dubmanager.domain.Serial;
+        import ru.kokorin.dubmanager.domain.Anime;
+        import ru.kokorin.dubmanager.domain.Title;
+        import ru.kokorin.dubmanager.event.AnimeEvent;
         import ru.kokorin.dubmanager.event.AppEvent;
-        import ru.kokorin.dubmanager.event.SerialEvent;
 
-        public var aStream:AStream = function ():AStream {
+        public var aStreamData:AStream = function ():AStream {
             const result:AStream = new AStream();
+            result.mode = AStreamMode.NO_REFERENCES;
             result.autodetectMetadata(true);
-            result.alias("Data", Vector.<Serial>);
+            result.alias("data", Vector.<Anime>);
+            result.processMetadata(Anime);
+            return result;
+        }();
+
+        public var aStreamTitles:AStream = function ():AStream {
+            const result:AStream = new AStream();
+            result.mode = AStreamMode.NO_REFERENCES;
+            result.alias("animetitles", Vector.<Anime>);
+            result.alias("anime", Anime);
+            result.implicitCollection(Anime, "titles", "title", Title);
+            result.processMetadata(Title);
             return result;
         }();
         ]]>

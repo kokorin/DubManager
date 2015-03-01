@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
+    <fx:Script>
+    <![CDATA[
+        private var _model:SelectPM;
+
+        [Bindable]
+        protected var selectedItem:Object;
+
+        [Bindable]
+        public function get model():SelectPM {
+            return _model;
+        }
+        public function set model(value:SelectPM):void {
+            if (_model) {
+                _model.removeEventListener(Event.OPEN, onModelOpen);
+                _model.removeEventListener(Event.CLOSE, onModelClose);
+            }
+            _model = value;
+            if (_model) {
+                _model.addEventListener(Event.OPEN, onModelOpen);
+                _model.addEventListener(Event.CLOSE, onModelClose);
+            }
+        }
+
+        private function onModelOpen(event:Event):void {
+
+        }
+        private function onModelClose(event:Event):void {
+            clear();
+        }
+
+        protected function clear():void {
+            selectedItem = null;
+        }
+
+        private function select(item:Object):void {
+            model.select(item);
+        }
+
+        private function close():void {
+            model.close();
+        }
+        ]]>
+    </fx:Script>
+
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle" paddingTop="2" paddingBottom="2"/>
+    </s:controlBarLayout>
+    <s:controlBarContent>
+        <s:Button width="50%" maxWidth="120" styleName="selectButton"
+                  label="{resourceManager.getString('component', 'select')}"
+                  click="{select(selectedItem)}" enabled="{selectedItem != null}"/>
+        <s:Button width="50%" maxWidth="120" styleName="cancelButton"
+                  label="{resourceManager.getString('component', 'cancel')}"
+                  click="{close()}"/>
+    </s:controlBarContent></s:Panel>

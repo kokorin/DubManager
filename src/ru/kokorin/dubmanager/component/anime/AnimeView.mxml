@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component:EditView xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:component="ru.kokorin.component.*"
+                    xmlns:episode="ru.kokorin.dubmanager.component.episode.*"
+                    xmlns:parsley="http://www.spicefactory.org/parsley">
+
+    <component:title>{resourceManager.getString('component', 'anime')}{changeTracker.changed?' *':''}</component:title>
+
+    <fx:Declarations>
+        <episode:EpisodePM id="episodePM" save="{model.saveEpisode(event.item, event.original)}"/>
+
+        <parsley:PopUp open="{episodePM.isOpen}" modal="true" reuse="false">
+            <parsley:behaviors>
+                <fx:Array>
+                    <component:KeepMaxSizeBehavior/>
+                </fx:Array>
+            </parsley:behaviors>
+            <episode:EpisodeView model="{episodePM}"/>
+        </parsley:PopUp>
+
+        <s:DateTimeFormatter id="dtFormatter" dateStyle="long" timeStyle="none"/>
+    </fx:Declarations>
+    <fx:Script>
+		<![CDATA[
+        import mx.collections.ArrayList;
+
+        import ru.kokorin.dubmanager.domain.AnimeStatus;
+        import ru.kokorin.dubmanager.domain.AnimeType;
+        import ru.kokorin.dubmanager.domain.Episode;
+        import ru.kokorin.dubmanager.domain.EpisodeStatus;
+        import ru.kokorin.util.LabelUtil;
+        import ru.kokorin.util.RendererUtil;
+
+        [Bindable]
+        public function get model():AnimePM {
+            return getModel() as AnimePM;
+        }
+
+        public function set model(value:AnimePM):void {
+            setModel(value);
+        }
+
+
+        override protected function clear():void {
+            super.clear();
+            viewstack.selectedIndex = 0;
+        }
+
+
+        [Deprecated(since="0.4.0", message="will be removed in 0.4.0 release")]
+        private function createEpisode():void {
+            var lastEpisode:Episode;
+            for each (var epiDub:Episode in model.anime.episodes) {
+                if (!lastEpisode || lastEpisode.number < epiDub.number) {
+                    lastEpisode = epiDub;
+                }
+            }
+
+            var newEpiDub:Episode;
+            if (lastEpisode) {
+                newEpiDub = new Episode();
+                newEpiDub.number = lastEpisode.number + 1;
+                newEpiDub.status = EpisodeStatus.NOT_STARTED;
+                newEpiDub.airDate = new Date(lastEpisode.airDate);
+                newEpiDub.airDate.date += 7;
+            }
+
+            episodePM.open(newEpiDub, true);
+        }
+
+        private function itemDoubleClick(event:MouseEvent, item:Object):void {
+            episodePM.open(item);
+        }
+        ]]>
+	</fx:Script>
+
+    <component:layout>
+        <s:VerticalLayout paddingLeft="5" paddingRight="5" paddingTop="5" paddingBottom="5"
+                          gap="0"/>
+    </component:layout>
+
+    <s:TabBar dataProvider="{viewstack}" width="300"/>
+    <s:BorderContainer width="100%" height="100%">
+        <mx:ViewStack id="viewstack" width="100%" height="100%">
+            <s:NavigatorContent width="100%" height="100%"
+                                label="{resourceManager.getString('component', 'anime.details')}">
+                <s:Scroller width="100%" height="100%">
+                    <s:Group width="100%">
+                        <s:Form width="100%">
+                            <s:layout>
+                                <s:FormLayout gap="-16" paddingLeft="-15" paddingRight="-15" paddingTop="-5"
+                                              paddingBottom="-5"/>
+                            </s:layout>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.name')}">
+                                <s:TextInput width="100%" editable="false"
+                                             text="{LabelUtil.getTitle(model.anime.titles)}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.type')}">
+                                <s:TextInput width="100%" text="{LabelUtil.getEnumLabel(model.anime.type)}"
+                                             editable="false"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.status')}">
+                                <s:DropDownList id="statusList" width="100%"
+                                                labelFunction="{LabelUtil.getEnumLabel}"
+                                                dataProvider="{new ArrayList(AnimeStatus.statuses)}"
+                                                selectedItem="{model.anime.status}"
+                                                change="{model.anime.status = statusList.selectedItem as AnimeStatus}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%"
+                                        label="{resourceManager.getString('component', 'anime.episodesCount')}">
+                                <s:TextInput width="100" text="{model.anime.episodeCount}" editable="false"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.videoURL')}">
+                                <s:TextInput width="100%" text="@{model.anime.videoURL}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%"
+                                        label="{resourceManager.getString('component', 'anime.subtitleURL')}">
+                                <s:TextInput width="100%" text="@{model.anime.subtitleURL}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.timingBy')}">
+                                <s:TextInput width="100%" text="@{model.anime.timingBy}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.soundBy')}">
+                                <s:TextInput width="100%" text="@{model.anime.soundBy}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%"
+                                        label="{resourceManager.getString('component', 'anime.integrationBy')}">
+                                <s:TextInput width="100%" text="@{model.anime.integrationBy}"/>
+                            </s:FormItem>
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.comment')}">
+                                <s:TextArea width="100%" text="@{model.anime.comment}" heightInLines="10"/>
+                            </s:FormItem>
+                        </s:Form>
+                    </s:Group>
+                </s:Scroller>
+            </s:NavigatorContent>
+
+            <s:NavigatorContent width="100%" height="100%"
+                                label="{resourceManager.getString('component', 'anime.episodes')}">
+                <s:VGroup width="100%" height="100%"
+                          paddingLeft="5" paddingRight="5" paddingBottom="5" paddingTop="5">
+                    <s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right">
+                        <s:Button width="100" label="{resourceManager.getString('component', 'add')}"
+                                  click="{createEpisode()}"/>
+                        <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
+                                  click="{episodePM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
+                        <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
+                                  click="{model.removeEpisode(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
+                    </s:HGroup>
+                    <s:DataGrid id="dg" width="100%" height="100%" dataProvider="{model.anime.episodes}"
+                                doubleClickEnabled="true" doubleClickMode="row"
+                                doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}">
+                        <s:columns>
+                            <s:ArrayList>
+                                <s:GridColumn dataField="number"
+                                              headerText="{resourceManager.getString('component', 'episode.number')}"/>
+                                <s:GridColumn dataField="status"
+                                              labelFunction="{LabelUtil.getEnumLabel}"
+                                              headerText="{resourceManager.getString('component', 'episode.status')}"/>
+                                <s:GridColumn dataField="airDate" formatter="{dtFormatter}"
+                                              headerText="{resourceManager.getString('component', 'episode.date')}"/>
+                            </s:ArrayList>
+                        </s:columns>
+                    </s:DataGrid>
+                </s:VGroup>
+            </s:NavigatorContent>
+        </mx:ViewStack>
+    </s:BorderContainer>
+</component:EditView>

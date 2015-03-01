@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component:BaseView xmlns:fx="http://ns.adobe.com/mxml/2009"
+<component:EditView xmlns:fx="http://ns.adobe.com/mxml/2009"
                     xmlns:s="library://ns.adobe.com/flex/spark"
                     xmlns:mx="library://ns.adobe.com/flex/mx"
                     xmlns:component="ru.kokorin.component.*"
@@ -29,21 +29,19 @@
 			<s:FormLayout gap="-16" paddingLeft="-20" paddingRight="-20" paddingTop="-10" paddingBottom="-15"/>
 		</s:layout>
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.number')}">
-			<s:NumericStepper width="100" value="@{model.episode.number}"
-                              minimum="0" maximum="{Number.MAX_VALUE}"
-                              stepSize="1" snapInterval="0.1"/>
+			<s:TextInput width="100" text="{model.episode.number}"/>
 		</s:FormItem>
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.status')}">
-			<s:DropDownList width="100%" labelFunction="{LabelUtil.getEnumLabelFunction(EpisodeStatus)}"
+			<s:DropDownList width="100%" labelFunction="{LabelUtil.getEnumLabel}"
                             dataProvider="{new ArrayList(EpisodeStatus.statuses)}"
 							selectedItem="@{model.episode.status}"/>
 		</s:FormItem>
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.date')}">
             <!--Can't use two-way binding with DataField: it causes ChangeTracker to falsely detect change
                 on opening -->
-			<mx:DateField id="dateField" width="100" selectedDate="{model.episode.date}"
-                          change="{model.episode.date = dateField.selectedDate}"
+			<mx:DateField id="dateField" width="100" selectedDate="{model.episode.airDate}"
+                          change="{model.episode.airDate = dateField.selectedDate}"
                           editable="true" yearNavigationEnabled="true"/>
 		</s:FormItem>
 	</s:Form>
-</component:BaseView>
+</component:EditView>

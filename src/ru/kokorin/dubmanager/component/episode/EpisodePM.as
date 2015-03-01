@@ -1,8 +1,8 @@
 package ru.kokorin.dubmanager.component.episode {
-import ru.kokorin.component.BasePM;
+import ru.kokorin.component.EditPM;
 import ru.kokorin.dubmanager.domain.Episode;
 
-public class EpisodePM extends BasePM {
+public class EpisodePM extends EditPM {
     public function EpisodePM() {
         super(Episode);
     }
