@@ -3,19 +3,10 @@
          xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:serial="ru.kokorin.dubmanager.component.anime.*"
          xmlns:parsley="http://www.spicefactory.org/parsley"
-         xmlns:popup="ru.kokorin.component.*" xmlns:display="flash.display.*"
+         xmlns:popup="ru.kokorin.component.*" xmlns:display="flash.display.*" xmlns:mx="library://ns.adobe.com/flex/mx"
          creationComplete="{onCC()}">
     <fx:Declarations>
-        <parsley:FastInject>
-            <parsley:injectionComplete><![CDATA[
-                    animeSelectPM.addEventListener(SelectEvent.SELECT, function (event:SelectEvent):void {
-                        animePM.open(event.item, true);
-                    });
-                ]]></parsley:injectionComplete>
-            <parsley:Inject property="animeSelectPM" type="{AnimeSelectPM}"/>
-        </parsley:FastInject>
-
-        <serial:AnimePM id="animePM"
+       <serial:AnimePM id="animePM"
                         save="{model.saveAnime(event.item, event.original)}"/>
 
         <parsley:PopUp open="{animePM.isOpen}" modal="true" reuse="true">
@@ -27,6 +18,15 @@
             <serial:AnimeView model="{animePM}"/>
         </parsley:PopUp>
 
+
+        <serial:AnimeSelectPM id="animeSelectPM">
+            <serial:select><![CDATA[
+                    model.loadAnime(event.item as Anime, function (anime:Anime) {
+                        animePM.open(anime, true);
+                    });
+                ]]></serial:select>
+        </serial:AnimeSelectPM>
+
         <parsley:PopUp open="{animeSelectPM.isOpen}" modal="true" reuse="true">
             <parsley:behaviors>
                 <fx:Array>
@@ -34,6 +34,10 @@
                 </fx:Array>
             </parsley:behaviors>
             <serial:AnimeSelectView model="{animeSelectPM}"/>
+        </parsley:PopUp>
+
+        <parsley:PopUp open="{model.isLoadingAnime || model.isLoadingAnimeTitles}" modal="true" reuse="true" center="true">
+            <mx:ProgressBar width="300" indeterminate="true"/>
         </parsley:PopUp>
 
         <s:DateTimeFormatter id="dtFormatter" dateStyle="long" timeStyle="none"/>
@@ -58,9 +62,7 @@
         import mx.events.CloseEvent;
 
         import ru.kokorin.component.SelectEvent;
-
         import ru.kokorin.dubmanager.component.anime.AnimeSelectPM;
-
         import ru.kokorin.dubmanager.domain.Anime;
         import ru.kokorin.dubmanager.domain.AnimeStatus;
         import ru.kokorin.dubmanager.domain.Episode;
@@ -70,11 +72,10 @@
 
         import spark.components.Alert;
 
-        [Bindable]
-        public var animeSelectPM:AnimeSelectPM;
-
         private var _model:WorkspacePM;
 
+
+        //TODO add load progress
         private function onCC():void {
             setInterval(dg.invalidateDisplayList, 15 * 60 * 1000);
         }
@@ -193,13 +194,14 @@
         <s:Label width="100%" styleName="caption"
                  text="{resourceManager.getString('component', 'animeList')}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'add')}"
-                  click="{animeSelectPM.open()}"/>
+                  click="{model.loadAnimeTitles(animeSelectPM.open)}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
                   click="{animePM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
                   click="{askRemove(dg.selectedItem as Anime)}" enabled="{dg.selectedItem}"/>
     </s:HGroup>
 
+    <!--TODO Sort by TITLES!!!-->
     <s:DataGrid id="dg" width="100%" height="100%"
                 dataProvider="{model.animeList}"
                 itemRenderer="ru.kokorin.dubmanager.renderer.AnimeGridRenderer"

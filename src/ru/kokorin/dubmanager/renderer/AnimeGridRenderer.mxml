@@ -27,6 +27,8 @@
             setCurrentState(getCurrentRendererState(), false);
         }
 
+
+        //TODO mark scheduled anime with green IF date of first episode is known
         override protected function getCurrentRendererState():String {
             var result:String = super.getCurrentRendererState();
 

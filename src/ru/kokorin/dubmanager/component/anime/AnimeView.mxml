@@ -110,7 +110,9 @@
                             </s:FormItem>
                             <s:FormItem width="100%"
                                         label="{resourceManager.getString('component', 'anime.episodesCount')}">
-                                <s:TextInput width="100" text="{model.anime.episodeCount}" editable="false"/>
+                                <s:TextInput id="episodeCountInput" width="100" restrict="0-9"
+                                             text="{model.anime.episodeCount}" editable="{isNaN(model.anime.id)}"
+                                             change="{model.anime.episodeCount = parseInt(episodeCountInput.text)}"/>
                             </s:FormItem>
                             <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.videoURL')}">
                                 <s:TextInput width="100%" text="@{model.anime.videoURL}"/>

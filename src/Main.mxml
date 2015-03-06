@@ -33,14 +33,14 @@
         import org.spicefactory.parsley.flex.tag.builder.FlexContextEvent;
 
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
-        import ru.kokorin.dubmanager.event.AppEvent;
         import ru.kokorin.dubmanager.event.AnimeEvent;
+        import ru.kokorin.dubmanager.event.AppEvent;
 
         private function onContextComplete(event:FlexContextEvent):void {
             event.context.scopeManager.dispatchMessage(new AnimeEvent(AnimeEvent.LOAD_DATA));
-            //event.context.scopeManager.dispatchMessage(new AnimeEvent(AnimeEvent.LOAD_TITLES));
             event.context.scopeManager.dispatchMessage(new AppEvent(AppEvent.UPDATE));
             //TODO preserve sort order
+            //TODO it seems that memory allocated for Vector is not get free by GC
         }
 
         private function onCreationComplete(event:Event):void {

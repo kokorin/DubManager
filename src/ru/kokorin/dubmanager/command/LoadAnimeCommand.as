@@ -19,19 +19,34 @@ public class LoadAnimeCommand extends BaseCommand {
     public var callback:Function;
     public var aStream:AStream;
 
+    private var xmlFile:File;
+
     public function execute(event:AnimeEvent):void {
-        var anime:Anime = event.anime;
+        xmlFile = File.applicationStorageDirectory.resolvePath("anime/" + event.anime.id + ".xml");
 
-        var date:Date = new Date();
-        date.date -= 7;
-        const weekAgoTime:Number = date.time;
-        const updateTime:Number = anime.update ? anime.update.time : 0;
-        const animeEndTime:Number = anime.endDate ? anime.endDate.time : Number.POSITIVE_INFINITY;
+        var anime:Anime = null;
 
-        //If anime was updated BEFORE its endDate AND it was updated more than week ago
-        if (animeEndTime > updateTime && updateTime < weekAgoTime) {
-            LOGGER.debug("XML data is possibly obsolete");
-            anime = null;
+        if (xmlFile.exists) {
+            LOGGER.debug("Loading data from file: {0}", xmlFile.url);
+            const fileStream:FileStream = new FileStream();
+            fileStream.open(xmlFile, FileMode.READ);
+            var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+            fileStream.close();
+
+            xmlString = XmlUtil.replaceXmlNamespace(xmlString);
+            anime = aStream.fromXML(XML(xmlString)) as Anime;
+
+            var date:Date = new Date();
+            date.date -= 7;
+            const weekAgoTime:Number = date.time;
+            const fileChangeTime:Number = Math.max(xmlFile.creationDate.time, xmlFile.modificationDate.time);
+            const animeEndTime:Number = anime.endDate ? anime.endDate.time : Number.POSITIVE_INFINITY;
+
+            //If anime was updated BEFORE its endDate AND it was updated more than week ago
+            if (animeEndTime > fileChangeTime && fileChangeTime < weekAgoTime) {
+                LOGGER.debug("XML data is possibly obsolete");
+                anime = null;
+            }
         }
 
         if (anime != null) {
@@ -60,13 +75,20 @@ public class LoadAnimeCommand extends BaseCommand {
     private function onLoadComplete(event:Event):void {
         const loader:URLLoader = event.target as URLLoader;
         LOGGER.info("Load complete: {0} bytes", loader.bytesLoaded);
-
         var xmlString:String = String(loader.data);
+
+        if (!xmlFile.parent.exists) {
+            xmlFile.parent.createDirectory();
+        }
+
+        const fileStream:FileStream = new FileStream();
+        fileStream.open(xmlFile, FileMode.WRITE);
+        fileStream.writeUTFBytes(xmlString);
+        fileStream.close();
+        LOGGER.info("Data written to file: {0}", xmlFile.url);
+
         xmlString = XmlUtil.replaceXmlNamespace(xmlString);
         const anime:Anime = aStream.fromXML(XML(xmlString)) as Anime;
-        anime.update = new Date();
-
-        //TODO deep supplement of original object
 
         callback(anime);
     }

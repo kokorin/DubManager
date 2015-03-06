@@ -8,6 +8,8 @@ public class TitleType extends Enum {
     public static const SYNONYM:TitleType = new TitleType("synonym");
     public static const MAIN:TitleType = new TitleType("main");
 
+    public static const types:Array = [SHORT, OFFICIAL, SYN, SYNONYM, MAIN];
+
     public function TitleType(name:String) {
         super(name);
     }

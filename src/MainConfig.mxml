@@ -3,46 +3,45 @@
            xmlns:parsley="http://www.spicefactory.org/parsley">
     <fx:Declarations>
         <parsley:Object type="{WorkspacePM}">
-            <parsley:ManagedEvents names="{[AnimeEvent.SAVE_DATA]}"/>
+            <parsley:ManagedEvents names="{[AnimeEvent.SAVE_DATA, AnimeEvent.LOAD, AnimeEvent.LOAD_TITLES]}"/>
+
+            <parsley:CommandStatus property="isLoadingAnime" selector="{AnimeEvent.LOAD}" type="{AnimeEvent}"/>
+            <parsley:CommandStatus property="isLoadingAnimeTitles" selector="{AnimeEvent.LOAD_TITLES}" type="{AnimeEvent}"/>
 
             <parsley:CommandResult selector="{AnimeEvent.LOAD_DATA}" type="{AnimeEvent}"
-                                   method="onLoadResult"/>
-        </parsley:Object>
-
-        <parsley:Object type="{AnimeSelectPM}">
-            <parsley:ManagedEvents names="{[AnimeEvent.LOAD_TITLES]}"/>
-
+                                   method="onLoadDataResult"/>
+            <parsley:CommandResult selector="{AnimeEvent.LOAD}" type="{AnimeEvent}"
+                                   method="onLoadAnimeResult"/>
             <parsley:CommandResult selector="{AnimeEvent.LOAD_TITLES}" type="{AnimeEvent}"
-                                   method="onLoadTitlesResult"/>
+                                   method="onLoadAnimeTitlesResult"/>
         </parsley:Object>
+
 
         <parsley:MapCommand selector="{AnimeEvent.LOAD_DATA}" messageType="{AnimeEvent}">
             <parsley:Command type="{LoadDataCommand}">
-                <parsley:Property name="aStream" value="{aStreamData}"/>
+                <parsley:Property name="aStream" typeRef="{AStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
         <parsley:MapCommand selector="{AnimeEvent.SAVE_DATA}" messageType="{AnimeEvent}">
             <parsley:Command type="{SaveDataCommand}">
-                <parsley:Property name="aStream" value="{aStreamData}"/>
+                <parsley:Property name="aStream" typeRef="{AStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
         <parsley:MapCommand selector="{AnimeEvent.LOAD_TITLES}" messageType="{AnimeEvent}">
-            <parsley:Command type="{LoadAnimeTitlesCommand}">
-                <parsley:Property name="aStream" value="{aStreamTitles}"/>
-            </parsley:Command>
+            <parsley:Command type="{LoadAnimeTitlesCommand}"/>
         </parsley:MapCommand>
 
         <parsley:MapCommand selector="{AnimeEvent.LOAD_LIST}" messageType="{AnimeEvent}">
             <parsley:Command type="{LoadAnimeListCommand}">
-                <parsley:Property name="aStream" value="{aStreamData}"/>
+                <parsley:Property name="aStream" typeRef="{AStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
         <parsley:MapCommand selector="{AnimeEvent.LOAD}" messageType="{AnimeEvent}">
             <parsley:Command type="{LoadAnimeCommand}">
-                <parsley:Property name="aStream" value="{aStreamData}"/>
+                <parsley:Property name="aStream" typeRef="{AStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
@@ -68,22 +67,12 @@
         import ru.kokorin.dubmanager.event.AnimeEvent;
         import ru.kokorin.dubmanager.event.AppEvent;
 
-        public var aStreamData:AStream = function ():AStream {
+        public var aStream:AStream = function ():AStream {
             const result:AStream = new AStream();
             result.mode = AStreamMode.NO_REFERENCES;
             result.autodetectMetadata(true);
             result.alias("data", Vector.<Anime>);
             result.processMetadata(Anime);
-            return result;
-        }();
-
-        public var aStreamTitles:AStream = function ():AStream {
-            const result:AStream = new AStream();
-            result.mode = AStreamMode.NO_REFERENCES;
-            result.alias("animetitles", Vector.<Anime>);
-            result.alias("anime", Anime);
-            result.implicitCollection(Anime, "titles", "title", Title);
-            result.processMetadata(Title);
             return result;
         }();
         ]]>

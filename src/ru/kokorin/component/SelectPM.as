@@ -4,14 +4,17 @@ import flash.events.EventDispatcher;
 import flash.utils.clearTimeout;
 import flash.utils.setTimeout;
 
+import mx.collections.ArrayCollection;
+import mx.collections.IList;
+import mx.collections.ListCollectionView;
+
 import org.apache.flex.collections.VectorCollection;
 
 [Event(name="open", type="flash.events.Event")]
 [Event(name="close", type="flash.events.Event")]
 [Event(name="select", type="ru.kokorin.component.SelectEvent")]
 public class SelectPM extends EventDispatcher {
-    private var _isOpen:Boolean;
-    private var _items:VectorCollection;
+    private var _items:ListCollectionView;
     private var _filterText:String;
     private var updateFilterTimeout:uint = 0;
 
@@ -19,42 +22,54 @@ public class SelectPM extends EventDispatcher {
     }
 
     [Bindable("itemsChange")]
-    public final function get items():VectorCollection {
+    public final function get items():IList {
         return _items;
     }
 
-    protected final function setItems(value:VectorCollection):void {
+    [Bindable("open")]
+    [Bindable("close")]
+    public function get isOpen():Boolean {
+        return items != null;
+    }
+
+    public function open(items:Object):void {
         if (_items) {
             _items.filterFunction = null;
         }
-        _items = value;
+
+        var collection:ListCollectionView = items as ListCollectionView;
+        if (!collection) {
+            var array:Array = items as Array;
+            if (!array) {
+                var list:IList = items as IList;
+                if (list) {
+                    array = list.toArray();
+                }
+            }
+            if (array) {
+                collection = new ArrayCollection(array);
+            } else if (items) {
+                collection = new VectorCollection(items);
+            }
+
+        }
+        _items = collection;
         if (_items) {
             _items.filterFunction = filterItem;
         }
 
         updateFilterLater();
         dispatchEvent(new Event("itemsChange"));
-    }
-
-    [Bindable("open")]
-    [Bindable("close")]
-    public function get isOpen():Boolean {
-        return _isOpen;
-    }
-
-    public function open():void {
-        if (!_isOpen) {
-            _isOpen = true;
-            dispatchEvent(new Event(Event.OPEN));
-        }
+        dispatchEvent(new Event(Event.OPEN));
     }
 
     public function close():void {
-        if (_isOpen) {
-            _isOpen = false;
-            dispatchEvent(new Event(Event.CLOSE));
+        if (_items) {
+            _items.filterFunction = null;
         }
+        _items = null;
         filterText = null;
+        dispatchEvent(new Event(Event.CLOSE));
     }
 
     [Bindable]
@@ -76,8 +91,8 @@ public class SelectPM extends EventDispatcher {
 
     private function updateFilterNow():void {
         updateFilterTimeout = 0;
-        if (items) {
-            items.refresh();
+        if (_items) {
+            _items.refresh();
         }
     }
 

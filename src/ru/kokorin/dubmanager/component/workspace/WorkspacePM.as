@@ -8,11 +8,20 @@ import ru.kokorin.dubmanager.domain.Anime;
 import ru.kokorin.dubmanager.event.AnimeEvent;
 
 [Event(name="saveData", type="ru.kokorin.dubmanager.event.AnimeEvent")]
+[Event(name="load", type="ru.kokorin.dubmanager.event.AnimeEvent")]
+[Event(name="loadTitles", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 public class WorkspacePM extends EventDispatcher {
     [Bindable]
     public var animeList:VectorCollection;
+    [Bindable]
+    public var isLoadingAnime:Boolean;
+    [Bindable]
+    public var isLoadingAnimeTitles:Boolean;
 
-    public function onLoadResult(result:Vector.<Anime>, event:Event):void {
+    private var loadAnimeCallback:Function;
+    private var loadAnimeTitlesCallback:Function;
+
+    public function onLoadDataResult(result:Vector.<Anime>, event:Event):void {
         if (!result) {
             result = new Vector.<Anime>();
         }
@@ -35,6 +44,34 @@ public class WorkspacePM extends EventDispatcher {
             animeList.removeItemAt(index);
         }
         saveData();
+    }
+
+    public function loadAnime(anime:Anime, callback:Function):void {
+        loadAnimeCallback = callback;
+
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.LOAD);
+        event.anime = anime;
+        dispatchEvent(event);
+    }
+
+    public function onLoadAnimeResult(anime:Anime, event:Event):void {
+        if (loadAnimeCallback != null) {
+            loadAnimeCallback(anime);
+            loadAnimeCallback = null;
+        }
+    }
+
+    public function loadAnimeTitles(callback:Function):void {
+        loadAnimeTitlesCallback = callback;
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.LOAD_TITLES);
+        dispatchEvent(event);
+    }
+
+    public function onLoadAnimeTitlesResult(animeList:Vector.<Anime>, event:Event):void {
+        if (loadAnimeTitlesCallback != null) {
+            loadAnimeTitlesCallback(animeList);
+            loadAnimeTitlesCallback = null;
+        }
     }
 
     private function saveData():void {
