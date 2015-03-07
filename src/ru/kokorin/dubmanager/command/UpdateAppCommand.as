@@ -13,8 +13,11 @@ import flash.net.URLRequest;
 import flash.utils.ByteArray;
 
 import mx.events.CloseEvent;
+import mx.logging.ILogger;
 
 import mx.resources.ResourceManager;
+
+import ru.kokorin.util.LogUtil;
 
 import spark.components.Alert;
 
@@ -23,11 +26,14 @@ import spark.components.Alert;
  * @see https://developer.github.com/v3/repos/releases/
  * @see https://api.github.com/repos/kokorin/AStream/releases
  */
-public class UpdateAppCommand extends BaseCommand {
+public class UpdateAppCommand {
     public var callback:Function;
     private var currentVersion:String;
     private var updateUrl:String;
     private var updateVersion:String;
+
+    private static const LOGGER:ILogger = LogUtil.getLogger(UpdateAppCommand);
+
 
     public function execute(event:Event):void {
         LOGGER.debug("Updating application...");

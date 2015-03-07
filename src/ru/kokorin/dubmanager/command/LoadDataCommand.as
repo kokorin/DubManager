@@ -7,6 +7,7 @@ import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 
 import mx.collections.ArrayCollection;
+import mx.logging.ILogger;
 
 import org.spicefactory.lib.reflect.ClassInfo;
 
@@ -20,9 +21,12 @@ import ru.kokorin.dubmanager.domain.Episode;
 import ru.kokorin.dubmanager.domain.EpisodeStatus;
 import ru.kokorin.dubmanager.domain.Title;
 import ru.kokorin.dubmanager.domain.TitleType;
+import ru.kokorin.util.LogUtil;
 
-public class LoadDataCommand extends BaseCommand {
+public class LoadDataCommand {
     public var aStream:AStream;
+
+    private static const LOGGER:ILogger = LogUtil.getLogger(LoadDataCommand);
 
     public function execute(event:Event):Vector.<Anime> {
         var result:Vector.<Anime>;

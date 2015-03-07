@@ -3,7 +3,7 @@
                     xmlns:s="library://ns.adobe.com/flex/spark"
                     xmlns:mx="library://ns.adobe.com/flex/mx"
                     xmlns:component="ru.kokorin.component.*"
-                    maxHeight="300" maxWidth="400">
+                    maxHeight="200" maxWidth="400">
 	
 	<component:title>{resourceManager.getString('component', 'episode')}{changeTracker.changed?' *':''}</component:title>
 	<fx:Script>
@@ -29,7 +29,13 @@
 			<s:FormLayout gap="-16" paddingLeft="-20" paddingRight="-20" paddingTop="-10" paddingBottom="-15"/>
 		</s:layout>
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.number')}">
-			<s:TextInput width="100" text="{model.episode.number}"/>
+			<s:TextInput width="100" text="{model.episode.number}" editable="{isNaN(model.episode.id)}"
+                         change="{model.episode.number = (event.currentTarget as TextInput).text}"/>
+		</s:FormItem>
+		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.title')}"
+                    visible="{!isNaN(model.episode.id)}" includeInLayout="{!isNaN(model.episode.id)}">
+			<s:TextInput width="100%" editable="false"
+                         text="{LabelUtil.getTitle(model.episode.titles)}"/>
 		</s:FormItem>
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.status')}">
 			<s:DropDownList width="100%" labelFunction="{LabelUtil.getEnumLabel}"
@@ -39,9 +45,11 @@
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.date')}">
             <!--Can't use two-way binding with DataField: it causes ChangeTracker to falsely detect change
                 on opening -->
-			<mx:DateField id="dateField" width="100" selectedDate="{model.episode.airDate}"
+			<mx:DateField id="dateField" width="100" editable="{isNaN(model.episode.id)}"
+                          mouseEnabled="{isNaN(model.episode.id)}" mouseChildren="{isNaN(model.episode.id)}"
+                          selectedDate="{model.episode.airDate}"
                           change="{model.episode.airDate = dateField.selectedDate}"
-                          editable="true" yearNavigationEnabled="true"/>
+                          yearNavigationEnabled="true"/>
 		</s:FormItem>
 	</s:Form>
 </component:EditView>

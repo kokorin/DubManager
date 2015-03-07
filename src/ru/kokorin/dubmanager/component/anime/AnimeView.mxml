@@ -52,22 +52,31 @@
         [Deprecated(since="0.4.0", message="will be removed in 0.4.0 release")]
         private function createEpisode():void {
             var lastEpisode:Episode;
-            for each (var epiDub:Episode in model.anime.episodes) {
-                if (!lastEpisode || lastEpisode.number < epiDub.number) {
-                    lastEpisode = epiDub;
+            var lastNumber:Number = Number.MAX_VALUE;
+            for each (var episode:Episode in model.anime.episodes) {
+                var episodeNumber = parseInt(episode.number);
+                if (isNaN(episodeNumber)) {
+                    continue;
+                }
+                if (!lastEpisode || lastNumber < episodeNumber) {
+                    lastEpisode = episode;
+                    lastNumber = episodeNumber;
                 }
             }
 
-            var newEpiDub:Episode;
+            const newEpisode:Episode = new Episode();
+            newEpisode.status = EpisodeStatus.NOT_STARTED;
+
             if (lastEpisode) {
-                newEpiDub = new Episode();
-                newEpiDub.number = lastEpisode.number + 1;
-                newEpiDub.status = EpisodeStatus.NOT_STARTED;
-                newEpiDub.airDate = new Date(lastEpisode.airDate);
-                newEpiDub.airDate.date += 7;
+                newEpisode.number = String(lastNumber + 1);
+                newEpisode.airDate = new Date(lastEpisode.airDate);
+                newEpisode.airDate.date += 7;
+            } else {
+                newEpisode.number = "0";
+                newEpisode.airDate = new Date();
             }
 
-            episodePM.open(newEpiDub, true);
+            episodePM.open(newEpisode, true);
         }
 
         private function itemDoubleClick(event:MouseEvent, item:Object):void {
@@ -93,7 +102,7 @@
                                 <s:FormLayout gap="-16" paddingLeft="-15" paddingRight="-15" paddingTop="-5"
                                               paddingBottom="-5"/>
                             </s:layout>
-                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.name')}">
+                            <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.title')}">
                                 <s:TextInput width="100%" editable="false"
                                              text="{LabelUtil.getTitle(model.anime.titles)}"/>
                             </s:FormItem>
@@ -156,8 +165,13 @@
                                 doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}">
                         <s:columns>
                             <s:ArrayList>
+                                <!--TODO smart sorting-->
                                 <s:GridColumn dataField="number"
                                               headerText="{resourceManager.getString('component', 'episode.number')}"/>
+                                <!--TODO smart sorting-->
+                                <s:GridColumn dataField="titles" visible="{!isNaN(model.anime.id)}"
+                                              labelFunction="{LabelUtil.getTitle}"
+                                              headerText="{resourceManager.getString('component', 'episode.title')}"/>
                                 <s:GridColumn dataField="status"
                                               labelFunction="{LabelUtil.getEnumLabel}"
                                               headerText="{resourceManager.getString('component', 'episode.status')}"/>

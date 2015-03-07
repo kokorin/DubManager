@@ -10,14 +10,18 @@ import flash.net.URLLoader;
 import flash.net.URLRequest;
 import flash.net.URLVariables;
 
+import mx.logging.ILogger;
+
 import ru.kokorin.astream.AStream;
 import ru.kokorin.dubmanager.domain.Anime;
 import ru.kokorin.dubmanager.event.AnimeEvent;
+import ru.kokorin.util.LogUtil;
 import ru.kokorin.util.XmlUtil;
 
-public class LoadAnimeCommand extends BaseCommand {
+public class LoadAnimeCommand {
     public var callback:Function;
     public var aStream:AStream;
+    private static const LOGGER:ILogger = LogUtil.getLogger(LoadAnimeCommand);
 
     private var xmlFile:File;
 

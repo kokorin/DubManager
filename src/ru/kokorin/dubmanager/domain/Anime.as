@@ -3,7 +3,7 @@ import mx.collections.ArrayCollection;
 
 [Bindable]
 [AStreamAlias("anime")]
-public class Anime {
+public class Anime implements ITitled{
     [AStreamAsAttribute]
     [AStreamAlias("aid")]
     public var id:Number;

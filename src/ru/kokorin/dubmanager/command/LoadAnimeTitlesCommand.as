@@ -9,6 +9,8 @@ import flash.filesystem.FileStream;
 import flash.net.URLLoader;
 import flash.net.URLRequest;
 
+import mx.logging.ILogger;
+
 import org.spicefactory.lib.reflect.ClassInfo;
 
 import ru.kokorin.astream.converter.Converter;
@@ -16,11 +18,14 @@ import ru.kokorin.astream.converter.EnumConverter;
 import ru.kokorin.dubmanager.domain.Anime;
 import ru.kokorin.dubmanager.domain.Title;
 import ru.kokorin.dubmanager.domain.TitleType;
+import ru.kokorin.util.LogUtil;
 import ru.kokorin.util.XmlUtil;
 
-public class LoadAnimeTitlesCommand extends BaseCommand {
+public class LoadAnimeTitlesCommand {
     public var callback:Function;
     private var xmlFile:File;
+
+    private static const LOGGER:ILogger = LogUtil.getLogger(LoadAnimeTitlesCommand);
 
     public function execute(event:Event):void {
         xmlFile = File.applicationStorageDirectory.resolvePath("anime-titles.xml");
@@ -28,9 +33,8 @@ public class LoadAnimeTitlesCommand extends BaseCommand {
         weekAgo.date -= 7;
 
         if (xmlFile.exists && xmlFile.modificationDate.time > weekAgo.time &&
-                xmlFile.creationDate.time > weekAgo.time)
-        {
-            const result:Vector.<Anime> = loadFromXmlFile();
+                xmlFile.creationDate.time > weekAgo.time) {
+            const result:Vector.<Anime> = loadFromFile(xmlFile);
             callback(result);
             return;
         }
@@ -39,6 +43,7 @@ public class LoadAnimeTitlesCommand extends BaseCommand {
         const request:URLRequest = new URLRequest("http://anidb.net/api/anime-titles.xml.gz");
         LOGGER.debug("Loading from {0}", request.url);
 
+        //TODO add progress event dispatching
         loader.addEventListener(Event.COMPLETE, onLoadComplete);
         loader.addEventListener(IOErrorEvent.IO_ERROR, onLoadError);
         loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onLoadError);
@@ -51,35 +56,44 @@ public class LoadAnimeTitlesCommand extends BaseCommand {
         LOGGER.info("Load complete: {0} bytes", loader.bytesLoaded);
         const xmlString:String = String(loader.data);
 
-        const fileStream:FileStream = new FileStream();
-        fileStream.open(xmlFile, FileMode.WRITE);
-        fileStream.writeUTFBytes(xmlString);
-        fileStream.close();
-        LOGGER.info("Data written to file: {0}", xmlFile.url);
+        try {
+            const fileStream:FileStream = new FileStream();
+            fileStream.open(xmlFile, FileMode.WRITE);
+            fileStream.writeUTFBytes(xmlString);
+            fileStream.close();
+            LOGGER.info("Data written to file: {0}", xmlFile.url);
+        } catch (error:Error) {
+            LOGGER.error(error.getStackTrace());
+        }
 
-        const result:Vector.<Anime> = parseAnimeTitles(xmlString);
+        const result:Vector.<Anime> = loadFromString(xmlString);
         callback(result);
     }
 
     private function onLoadError(event:ErrorEvent):void {
         LOGGER.error("Load error: {0}: {1}", event.errorID, event.text);
-        const result:Vector.<Anime> = loadFromXmlFile();
+        const result:Vector.<Anime> = loadFromFile(xmlFile);
         callback(result);
     }
 
-    private function loadFromXmlFile():Vector.<Anime> {
-        LOGGER.debug("Loading from XML-file: {0}", xmlFile.nativePath);
-        const fileStream:FileStream = new FileStream();
-        fileStream.open(xmlFile, FileMode.READ);
-        var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
-        fileStream.close();
-        LOGGER.debug("XML-file loaded");
-
-        const result:Vector.<Anime> = parseAnimeTitles(xmlString);
-        return result;
+    private static function loadFromFile(xmlFile:File):Vector.<Anime> {
+        try {
+            if (xmlFile.exists) {
+                LOGGER.debug("Loading from XML-file: {0}", xmlFile.nativePath);
+                const fileStream:FileStream = new FileStream();
+                fileStream.open(xmlFile, FileMode.READ);
+                var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+                fileStream.close();
+                LOGGER.debug("XML-file loaded");
+                return loadFromString(xmlString);
+            }
+        } catch (error:Error) {
+            LOGGER.error(error.getStackTrace());
+        }
+        return null;
     }
 
-    private function parseAnimeTitles(xmlString:String):Vector.<Anime> {
+    private static function loadFromString(xmlString:String):Vector.<Anime> {
         const result:Vector.<Anime> = new Vector.<Anime>();
 
         try {

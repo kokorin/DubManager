@@ -212,8 +212,8 @@
         <s:columns>
             <s:ArrayList>
                 <s:GridColumn dataField="titles" percentWidth="40" showDataTips="{true}"
-                              headerText="{resourceManager.getString('component', 'anime.name')}"
-                              labelFunction="{LabelUtil.getTitle}"/>
+                              headerText="{resourceManager.getString('component', 'anime.title')}"
+                              labelFunction="{LabelUtil.getTitle}" dataTipFunction="{LabelUtil.getTitle}"/>
                 <s:GridColumn dataField="type" width="80"
                               headerText="{resourceManager.getString('component', 'anime.type')}"
                               labelFunction="{LabelUtil.getEnumLabel}"/>

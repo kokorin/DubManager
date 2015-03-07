@@ -3,12 +3,17 @@ import flash.filesystem.File;
 import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 
+import mx.logging.ILogger;
+
 import ru.kokorin.astream.AStream;
 import ru.kokorin.dubmanager.event.AnimeEvent;
+import ru.kokorin.util.LogUtil;
 
-public class SaveDataCommand extends BaseCommand {
+public class SaveDataCommand {
     public var aStream:AStream;
     public var callback:Function;
+
+    private static const LOGGER:ILogger = LogUtil.getLogger(SaveDataCommand);
 
     public function execute(event:AnimeEvent):void {
         try {

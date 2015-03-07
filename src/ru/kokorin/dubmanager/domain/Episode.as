@@ -1,7 +1,7 @@
 package ru.kokorin.dubmanager.domain {
 [Bindable]
 [AStreamAlias("episode")]
-public class Episode {
+public class Episode implements ITitled{
     [AStreamAsAttribute]
     [AStreamAlias("id")]
     [AStreamOrder(10)]

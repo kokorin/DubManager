@@ -3,8 +3,7 @@ import avmplus.getQualifiedClassName;
 
 import mx.resources.ResourceManager;
 
-import ru.kokorin.dubmanager.domain.Anime;
-
+import ru.kokorin.dubmanager.domain.ITitled;
 import ru.kokorin.dubmanager.domain.Title;
 import ru.kokorin.dubmanager.domain.TitleType;
 
@@ -13,8 +12,8 @@ public class LabelUtil {
     public static function getTitle(item:Object, column:Object = null):String {
         item = getProperty(item, column);
 
-        const anime:Anime = item as Anime;
-        const titles:Vector.<Title> = anime ? anime.titles : item as Vector.<Title>;
+        const titled:ITitled = item as ITitled;
+        const titles:Vector.<Title> = titled ? titled.titles : item as Vector.<Title>;
 
         if (!titles || !titles.length) {
             return "";
