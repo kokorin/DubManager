@@ -1,14 +1,16 @@
 package ru.kokorin.dubmanager.component.workspace {
 import flash.events.Event;
 import flash.events.EventDispatcher;
+import flash.utils.setTimeout;
 
 import org.apache.flex.collections.VectorCollection;
 
 import ru.kokorin.dubmanager.domain.Anime;
 import ru.kokorin.dubmanager.event.AnimeEvent;
 
+[Event(name="updateList", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 [Event(name="saveData", type="ru.kokorin.dubmanager.event.AnimeEvent")]
-[Event(name="load", type="ru.kokorin.dubmanager.event.AnimeEvent")]
+[Event(name="loadAnime", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 [Event(name="loadTitles", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 public class WorkspacePM extends EventDispatcher {
     [Bindable]
@@ -26,6 +28,7 @@ public class WorkspacePM extends EventDispatcher {
             result = new Vector.<Anime>();
         }
         animeList = new VectorCollection(result);
+        setTimeout(updateAnimeList, 5000);
     }
 
     public function saveAnime(anime:Object, original:Object):void {
@@ -49,7 +52,7 @@ public class WorkspacePM extends EventDispatcher {
     public function loadAnime(anime:Anime, callback:Function):void {
         loadAnimeCallback = callback;
 
-        const event:AnimeEvent = new AnimeEvent(AnimeEvent.LOAD);
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.LOAD_ANIME);
         event.anime = anime;
         dispatchEvent(event);
     }
@@ -78,6 +81,18 @@ public class WorkspacePM extends EventDispatcher {
         const event:AnimeEvent = new AnimeEvent(AnimeEvent.SAVE_DATA);
         event.animeList = animeList.source as Vector.<Anime>;
         dispatchEvent(event);
+    }
+
+    private function updateAnimeList():void {
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.UPDATE_LIST);
+        event.animeList = animeList.source as Vector.<Anime>;
+        dispatchEvent(event);
+    }
+
+    public function onUpdateAnimeListResult(result:Boolean, event:Event):void {
+        if (result) {
+            animeList = new VectorCollection(animeList.source);
+        }
     }
 }
 }

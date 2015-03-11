@@ -32,7 +32,8 @@ public class LoadAnimeTitlesCommand {
         const weekAgo:Date = new Date();
         weekAgo.date -= 7;
 
-        if (xmlFile.exists && xmlFile.modificationDate.time > weekAgo.time &&
+        if (xmlFile.exists && xmlFile.size > 10 &&
+                xmlFile.modificationDate.time > weekAgo.time &&
                 xmlFile.creationDate.time > weekAgo.time) {
             const result:Vector.<Anime> = loadFromFile(xmlFile);
             callback(result);
@@ -104,6 +105,7 @@ public class LoadAnimeTitlesCommand {
             const xml:XML = new XML(xmlString);
             LOGGER.debug("DOM XML constructed");
 
+            //TODO TitleType.SYN in anime-titles.xml is TitleType.SYNONYM in anime.xml
             const typeConverter:Converter = new EnumConverter(ClassInfo.forClass(TitleType));
 
             //Manual parsing is up to 5 times faster

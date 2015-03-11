@@ -5,7 +5,7 @@ import mx.collections.ArrayCollection;
 [AStreamAlias("anime")]
 public class Anime implements ITitled{
     [AStreamAsAttribute]
-    [AStreamAlias("aid")]
+    [AStreamAlias("id")]
     public var id:Number;
 
     [AStreamAlias("type")]
@@ -25,12 +25,6 @@ public class Anime implements ITitled{
     [AStreamConverter("ru.kokorin.astream.converter.DateConverter", params="yyyy-MM-dd")]
     [AStreamOrder(40)]
     public var endDate:Date;
-
-    //----Dub field-----
-    [AStreamAlias("update")]
-    [AStreamConverter("ru.kokorin.astream.converter.DateConverter", params="yyyy-MM-dd")]
-    [AStreamOrder(45)]
-    public var update:Date;
 
     [AStreamAlias("titles")]
     [AStreamOrder(50)]

@@ -13,6 +13,8 @@ import flash.net.URLVariables;
 import mx.logging.ILogger;
 
 import ru.kokorin.astream.AStream;
+
+import ru.kokorin.astream.AStream;
 import ru.kokorin.dubmanager.domain.Anime;
 import ru.kokorin.dubmanager.event.AnimeEvent;
 import ru.kokorin.util.LogUtil;
@@ -21,41 +23,46 @@ import ru.kokorin.util.XmlUtil;
 public class LoadAnimeCommand {
     public var callback:Function;
     public var aStream:AStream;
+
+    private var animeId:Number;
+    private var xmlFile:File;
     private static const LOGGER:ILogger = LogUtil.getLogger(LoadAnimeCommand);
 
-    private var xmlFile:File;
 
-    public function execute(event:AnimeEvent):void {
-        xmlFile = File.applicationStorageDirectory.resolvePath("anime/" + event.anime.id + ".xml");
+    public function LoadAnimeCommand(aStream:AStream = null, animeId:Number = NaN) {
+        this.aStream = aStream;
+        this.animeId = animeId;
+    }
 
-        var anime:Anime = null;
-
-        if (xmlFile.exists) {
-            LOGGER.debug("Loading data from file: {0}", xmlFile.url);
-            const fileStream:FileStream = new FileStream();
-            fileStream.open(xmlFile, FileMode.READ);
-            var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
-            fileStream.close();
-
-            xmlString = XmlUtil.replaceXmlNamespace(xmlString);
-            anime = aStream.fromXML(XML(xmlString)) as Anime;
-
-            var date:Date = new Date();
-            date.date -= 7;
-            const weekAgoTime:Number = date.time;
-            const fileChangeTime:Number = Math.max(xmlFile.creationDate.time, xmlFile.modificationDate.time);
-            const animeEndTime:Number = anime.endDate ? anime.endDate.time : Number.POSITIVE_INFINITY;
-
-            //If anime was updated BEFORE its endDate AND it was updated more than week ago
-            if (animeEndTime > fileChangeTime && fileChangeTime < weekAgoTime) {
-                LOGGER.debug("XML data is possibly obsolete");
-                anime = null;
-            }
+    public function execute(event:AnimeEvent = null):void {
+        if (event && event.anime) {
+            animeId = event.anime.id;
         }
+        xmlFile = File.applicationStorageDirectory.resolvePath("anime/" + animeId + ".xml");
 
-        if (anime != null) {
-            callback(anime);
-            return;
+        if (xmlFile.exists && xmlFile.size > 10) {
+            var weekAgo:Date = new Date();
+            weekAgo.date -= 7;
+
+            if (xmlFile.modificationDate.time > weekAgo.time &&
+                    xmlFile.creationDate.time > weekAgo.time) {
+                try {
+                    LOGGER.debug("Loading data from file: {0}", xmlFile.url);
+                    const fileStream:FileStream = new FileStream();
+                    fileStream.open(xmlFile, FileMode.READ);
+                    var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+                    fileStream.close();
+
+                    xmlString = XmlUtil.replaceXmlNamespace(xmlString);
+                    const anime = aStream.fromXML(XML(xmlString)) as Anime;
+
+                    callback(anime);
+                    return;
+                } catch (error:Error) {
+                    LOGGER.warn(error.getStackTrace());
+                }
+            }
+            LOGGER.debug("XML data is possibly obsolete");
         }
 
         const loader:URLLoader = new URLLoader();
@@ -65,7 +72,7 @@ public class LoadAnimeCommand {
         variables.clientver = 1;
         variables.protover = 1;
         variables.request = "anime";
-        variables.aid = event.anime.id;
+        variables.aid = animeId;
         request.data = variables;
 
         loader.addEventListener(Event.COMPLETE, onLoadComplete);

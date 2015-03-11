@@ -41,6 +41,7 @@
             event.context.scopeManager.dispatchMessage(new AppEvent(AppEvent.UPDATE));
             //TODO preserve sort order
             //TODO it seems that memory allocated for Vector is not get free by GC
+            //TODO add try-catch to every file and parse operations
         }
 
         private function onCreationComplete(event:Event):void {

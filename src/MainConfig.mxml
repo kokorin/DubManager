@@ -3,17 +3,21 @@
            xmlns:parsley="http://www.spicefactory.org/parsley">
     <fx:Declarations>
         <parsley:Object type="{WorkspacePM}">
-            <parsley:ManagedEvents names="{[AnimeEvent.SAVE_DATA, AnimeEvent.LOAD, AnimeEvent.LOAD_TITLES]}"/>
+            <parsley:ManagedEvents
+                    names="{[AnimeEvent.SAVE_DATA, AnimeEvent.LOAD_ANIME, AnimeEvent.LOAD_TITLES, AnimeEvent.UPDATE_LIST]}"/>
 
-            <parsley:CommandStatus property="isLoadingAnime" selector="{AnimeEvent.LOAD}" type="{AnimeEvent}"/>
-            <parsley:CommandStatus property="isLoadingAnimeTitles" selector="{AnimeEvent.LOAD_TITLES}" type="{AnimeEvent}"/>
+            <parsley:CommandStatus property="isLoadingAnime" selector="{AnimeEvent.LOAD_ANIME}" type="{AnimeEvent}"/>
+            <parsley:CommandStatus property="isLoadingAnimeTitles" selector="{AnimeEvent.LOAD_TITLES}"
+                                   type="{AnimeEvent}"/>
 
             <parsley:CommandResult selector="{AnimeEvent.LOAD_DATA}" type="{AnimeEvent}"
                                    method="onLoadDataResult"/>
-            <parsley:CommandResult selector="{AnimeEvent.LOAD}" type="{AnimeEvent}"
+            <parsley:CommandResult selector="{AnimeEvent.LOAD_ANIME}" type="{AnimeEvent}"
                                    method="onLoadAnimeResult"/>
             <parsley:CommandResult selector="{AnimeEvent.LOAD_TITLES}" type="{AnimeEvent}"
                                    method="onLoadAnimeTitlesResult"/>
+            <parsley:CommandResult selector="{AnimeEvent.UPDATE_LIST}" type="{AnimeEvent}"
+                                   method="onUpdateAnimeListResult"/>
         </parsley:Object>
 
 
@@ -33,13 +37,13 @@
             <parsley:Command type="{LoadAnimeTitlesCommand}"/>
         </parsley:MapCommand>
 
-        <parsley:MapCommand selector="{AnimeEvent.LOAD_LIST}" messageType="{AnimeEvent}">
-            <parsley:Command type="{LoadAnimeListCommand}">
+        <parsley:MapCommand selector="{AnimeEvent.UPDATE_LIST}" messageType="{AnimeEvent}">
+            <parsley:Command type="{UpdateAnimeListCommand}">
                 <parsley:Property name="aStream" typeRef="{AStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
-        <parsley:MapCommand selector="{AnimeEvent.LOAD}" messageType="{AnimeEvent}">
+        <parsley:MapCommand selector="{AnimeEvent.LOAD_ANIME}" messageType="{AnimeEvent}">
             <parsley:Command type="{LoadAnimeCommand}">
                 <parsley:Property name="aStream" typeRef="{AStream}"/>
             </parsley:Command>
@@ -55,15 +59,13 @@
         import ru.kokorin.astream.AStream;
         import ru.kokorin.astream.AStreamMode;
         import ru.kokorin.dubmanager.command.LoadAnimeCommand;
-        import ru.kokorin.dubmanager.command.LoadAnimeListCommand;
         import ru.kokorin.dubmanager.command.LoadAnimeTitlesCommand;
         import ru.kokorin.dubmanager.command.LoadDataCommand;
         import ru.kokorin.dubmanager.command.SaveDataCommand;
+        import ru.kokorin.dubmanager.command.UpdateAnimeListCommand;
         import ru.kokorin.dubmanager.command.UpdateAppCommand;
-        import ru.kokorin.dubmanager.component.anime.AnimeSelectPM;
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
         import ru.kokorin.dubmanager.domain.Anime;
-        import ru.kokorin.dubmanager.domain.Title;
         import ru.kokorin.dubmanager.event.AnimeEvent;
         import ru.kokorin.dubmanager.event.AppEvent;
 

@@ -5,6 +5,7 @@ public class RelationType extends Enum {
     public static const SEQUEL:RelationType = new RelationType("Sequel");
     public static const PREQUEL:RelationType = new RelationType("Prequel");
     public static const SUMMARY:RelationType = new RelationType("Summary");
+    public static const SAME_SETTING:RelationType = new RelationType("Same Setting");
     public static const ALTERNATIVE_SETTING:RelationType = new RelationType("Alternative Setting");
     public static const CHARACTER:RelationType = new RelationType("Character");
     public static const SIDE_STORY:RelationType = new RelationType("Side Story");
