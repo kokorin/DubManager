@@ -36,6 +36,12 @@ public class UpdateAppCommand {
 
 
     public function execute(event:Event):void {
+        if (!Updater.isSupported) {
+            LOGGER.warn("Updater is NOT supported! Canceling updated!");
+            callback();
+            return;
+        }
+
         LOGGER.debug("Updating application...");
 
         const xml:XML = NativeApplication.nativeApplication.applicationDescriptor;

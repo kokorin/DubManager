@@ -41,10 +41,12 @@ public class WorkspacePM extends EventDispatcher {
         saveData();
     }
 
-    public function removeAnime(anime:Object):void {
-        const index:int = animeList.getItemIndex(anime);
-        if (index != -1) {
-            animeList.removeItemAt(index);
+    public function removeAnime(toRemove:Vector.<Object>):void {
+        for each (var anime:Anime in toRemove) {
+            const index:int = animeList.getItemIndex(anime);
+            if (index != -1) {
+                animeList.removeItemAt(index);
+            }
         }
         saveData();
     }

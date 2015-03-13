@@ -27,6 +27,7 @@ public class LoadAnimeTitlesCommand {
 
     private static const LOGGER:ILogger = LogUtil.getLogger(LoadAnimeTitlesCommand);
 
+    //TODO keep result of previous execution for some time
     public function execute(event:Event):void {
         xmlFile = File.applicationStorageDirectory.resolvePath("anime-titles.xml");
         const weekAgo:Date = new Date();

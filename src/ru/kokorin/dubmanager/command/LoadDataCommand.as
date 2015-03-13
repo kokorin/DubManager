@@ -59,6 +59,13 @@ public class LoadDataCommand {
             result = aStream.fromXML(xml) as Vector.<Anime>;
         }
 
+        //TODO remove in 0.4.0
+        for each (var anime:Anime in result) {
+            if (anime.id == 0) {
+                anime.id = NaN;
+            }
+        }
+
         return result;
     }
 

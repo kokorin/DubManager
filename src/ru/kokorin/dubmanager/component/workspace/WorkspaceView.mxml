@@ -6,7 +6,7 @@
          xmlns:popup="ru.kokorin.component.*" xmlns:display="flash.display.*" xmlns:mx="library://ns.adobe.com/flex/mx"
          creationComplete="{onCC()}">
     <fx:Declarations>
-       <serial:AnimePM id="animePM"
+        <serial:AnimePM id="animePM"
                         save="{model.saveAnime(event.item, event.original)}"/>
 
         <parsley:PopUp open="{animePM.isOpen}" modal="true" reuse="true">
@@ -36,33 +36,34 @@
             <serial:AnimeSelectView model="{animeSelectPM}"/>
         </parsley:PopUp>
 
-        <parsley:PopUp open="{model.isLoadingAnime || model.isLoadingAnimeTitles}" modal="true" reuse="true" center="true">
+        <parsley:PopUp open="{model.isLoadingAnime || model.isLoadingAnimeTitles}" modal="true" reuse="true"
+                       center="true">
             <mx:ProgressBar width="300" indeterminate="true"/>
         </parsley:PopUp>
 
-        <s:DateTimeFormatter id="dtFormatter" dateStyle="long" timeStyle="none"/>
+        <s:DateTimeFormatter id="dtFormatter" dateTimePattern="EE, dd MMM yyyy"/>
 
         <display:NativeMenu id="rightClickMenu">
             <display:items>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'edit')}"
+                                        enabled="{isSingle(dg.selectedItems)}"
                                         select="{animePM.open(dg.selectedItem)}"/>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.videoURL')}"
-                                        enabled="{isHttpUrl((dg.selectedItem as Anime).videoURL)}"
+                                        enabled="{isSingle(dg.selectedItems) &amp;&amp; URLUtil.isHttpURL((dg.selectedItem as Anime).videoURL)}"
                                         select="{openVideo(dg.selectedItem as Anime)}"/>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.subtitleURL')}"
-                                        enabled="{isHttpUrl((dg.selectedItem as Anime).subtitleURL)}"
+                                        enabled="{isSingle(dg.selectedItems) &amp;&amp; URLUtil.isHttpURL((dg.selectedItem as Anime).subtitleURL)}"
                                         select="{openSubtitles(dg.selectedItem as Anime)}"/>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'remove')}"
-                                        select="{askRemove(dg.selectedItem as Anime)}"/>
+                                        select="{askRemove(dg.selectedItems)}"/>
             </display:items>
         </display:NativeMenu>
     </fx:Declarations>
 
     <fx:Script><![CDATA[
         import mx.events.CloseEvent;
+        import mx.utils.URLUtil;
 
-        import ru.kokorin.component.SelectEvent;
-        import ru.kokorin.dubmanager.component.anime.AnimeSelectPM;
         import ru.kokorin.dubmanager.domain.Anime;
         import ru.kokorin.dubmanager.domain.AnimeStatus;
         import ru.kokorin.dubmanager.domain.Episode;
@@ -90,19 +91,24 @@
         }
 
 
-        private function askRemove(anime:Anime):void {
-            const name:String = LabelUtil.getTitle(anime.titles);
+        private function askRemove(animeList:Vector.<Object>):void {
+            const names:Array = new Array();
+            for each (var anime:Anime in animeList) {
+                names.push(LabelUtil.getTitle(anime.titles));
+            }
             const title:String = resourceManager.getString('component', 'anime.removeTitle');
-            const question:String = resourceManager.getString('component', 'anime.removeQuestion', [name]);
+            const question:String = resourceManager.getString('component', 'anime.removeQuestion', [names.join(", ")]);
             Alert.show(question, title, Alert.YES | Alert.NO, null, function (event:CloseEvent):void {
                 if (event.detail == Alert.YES) {
-                    model.removeAnime(anime);
+                    model.removeAnime(animeList);
                 }
             });
         }
 
         private function itemRightClick(event:MouseEvent, item:Object):void {
-            dg.selectedItem = item;
+            if (!dg.selectedItems || dg.selectedItems.indexOf(item) == -1) {
+                dg.selectedItem = item;
+            }
             rightClickMenu.display(stage, event.stageX, event.stageY);
         }
 
@@ -114,7 +120,7 @@
             if (aniDub && aniDub.status == AnimeStatus.IN_PROCESS) {
                 var current:Number = 0;
                 for each(var episode:Episode in aniDub.episodes) {
-                    var epNumber:Number = parseInt(episode.number);
+                    var epNumber:Number = parseFloat(episode.number);
                     //Looking for latest completed episode
                     if (episode.status == EpisodeStatus.COMPLETE && current < epNumber) {
                         current = epNumber;
@@ -151,23 +157,28 @@
         }
 
         private static function getNextDate(anime:Anime):Date {
-            var result:Episode = null;
+            var result:Date = null;
             if (anime && anime.status == AnimeStatus.IN_PROCESS) {
-                for each(var epiDub:Episode in anime.episodes) {
+                var hasEpisodes:Boolean = false;
+
+                for each(var episode:Episode in anime.episodes) {
+                    var epNumber:Number = parseFloat(episode.number);
+                    if (epNumber) {
+                        hasEpisodes = true;
+                    }
                     //Looking for newest not_started episode
-                    if (epiDub.status == EpisodeStatus.NOT_STARTED && (!result || result.number > epiDub.number)) {
-                        result = epiDub;
+                    if (episode.status == EpisodeStatus.NOT_STARTED && epNumber && episode.airDate &&
+                            (!result || result.time > episode.airDate.time)) {
+                        result = episode.airDate;
                     }
                 }
-            }
-            if (result) {
-                return result.airDate;
-            }
-            return null;
-        }
 
-        private static function isHttpUrl(value:String):Boolean {
-            return value != null && value.indexOf("http") == 0;
+                if (!result && !hasEpisodes) {
+                    result = anime.startDate;
+                }
+
+            }
+            return result;
         }
 
         private static function openVideo(serial:Anime):void {
@@ -183,6 +194,10 @@
                 navigateToURL(urlReq, "_blank");
             }
         }
+
+        private static function isSingle(vector:Vector.<Object>):Boolean {
+            return vector && vector.length == 1;
+        }
         ]]>
     </fx:Script>
 
@@ -196,9 +211,9 @@
         <s:Button width="100" label="{resourceManager.getString('component', 'add')}"
                   click="{model.loadAnimeTitles(animeSelectPM.open)}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
-                  click="{animePM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
+                  click="{animePM.open(dg.selectedItem)}" enabled="{isSingle(dg.selectedItems)}"/>
         <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
-                  click="{askRemove(dg.selectedItem as Anime)}" enabled="{dg.selectedItem}"/>
+                  click="{askRemove(dg.selectedItems)}" enabled="{dg.selectedItem}"/>
     </s:HGroup>
 
     <!--TODO Sort by TITLES!!!-->
@@ -208,12 +223,14 @@
                 doubleClickEnabled="true" doubleClickMode="row"
                 doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}"
                 rightMouseDown="{RendererUtil.onRenderer(event, itemRightClick)}"
-                resizableColumns="true">
+                selectionMode="multipleRows"
+                multiColumnSortingEnabled="true" resizableColumns="true">
         <s:columns>
             <s:ArrayList>
                 <s:GridColumn dataField="titles" percentWidth="40" showDataTips="{true}"
                               headerText="{resourceManager.getString('component', 'anime.title')}"
-                              labelFunction="{LabelUtil.getTitle}" dataTipFunction="{LabelUtil.getTitle}"/>
+                              labelFunction="{LabelUtil.getTitle}" dataTipFunction="{LabelUtil.getTitle}"
+                              sortCompareFunction="{LabelUtil.compareByTitle}"/>
                 <s:GridColumn dataField="type" width="80"
                               headerText="{resourceManager.getString('component', 'anime.type')}"
                               labelFunction="{LabelUtil.getEnumLabel}"/>

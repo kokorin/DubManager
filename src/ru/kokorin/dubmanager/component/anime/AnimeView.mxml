@@ -20,14 +20,14 @@
             <episode:EpisodeView model="{episodePM}"/>
         </parsley:PopUp>
 
-        <s:DateTimeFormatter id="dtFormatter" dateStyle="long" timeStyle="none"/>
+        <s:DateTimeFormatter id="dtFormatter" dateTimePattern="EE, dd MMM yyyy"/>
     </fx:Declarations>
     <fx:Script>
 		<![CDATA[
         import mx.collections.ArrayList;
+        import mx.collections.SortFieldCompareTypes;
 
         import ru.kokorin.dubmanager.domain.AnimeStatus;
-        import ru.kokorin.dubmanager.domain.AnimeType;
         import ru.kokorin.dubmanager.domain.Episode;
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
         import ru.kokorin.util.LabelUtil;
@@ -162,16 +162,17 @@
                     </s:HGroup>
                     <s:DataGrid id="dg" width="100%" height="100%" dataProvider="{model.anime.episodes}"
                                 doubleClickEnabled="true" doubleClickMode="row"
-                                doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}">
+                                doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}"
+                                multiColumnSortingEnabled="true">
                         <s:columns>
                             <s:ArrayList>
-                                <!--TODO smart sorting-->
                                 <s:GridColumn dataField="number"
-                                              headerText="{resourceManager.getString('component', 'episode.number')}"/>
-                                <!--TODO smart sorting-->
+                                              headerText="{resourceManager.getString('component', 'episode.number')}"
+                                              sortCompareType="{SortFieldCompareTypes.NUMERIC}"/>
                                 <s:GridColumn dataField="titles" visible="{!isNaN(model.anime.id)}"
-                                              labelFunction="{LabelUtil.getTitle}"
-                                              headerText="{resourceManager.getString('component', 'episode.title')}"/>
+                                              labelFunction="{LabelUtil.getTitle}" dataTipFunction="{LabelUtil.getTitle}"
+                                              headerText="{resourceManager.getString('component', 'episode.title')}"
+                                              sortCompareFunction="{LabelUtil.compareByTitle}"/>
                                 <s:GridColumn dataField="status"
                                               labelFunction="{LabelUtil.getEnumLabel}"
                                               headerText="{resourceManager.getString('component', 'episode.status')}"/>

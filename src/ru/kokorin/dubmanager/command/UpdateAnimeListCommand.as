@@ -18,7 +18,7 @@ public class UpdateAnimeListCommand {
     public var aStream:AStream;
 
     private var animeList:Vector.<Anime>;
-    private var updated:Boolean = false;
+    private var animeUpdated:Boolean = false;
 
     private static const LOGGER:ILogger = LogUtil.getLogger(UpdateAnimeListCommand);
 
@@ -26,12 +26,22 @@ public class UpdateAnimeListCommand {
         const commandBuilder:CommandGroupBuilder = Commands.asSequence();
 
         animeList = event.animeList;
+        const toUpdate:Array = new Array();
         for each (var anime:Anime in animeList) {
             if (isNaN(anime.id) || anime.status == AnimeStatus.COMPLETE) {
                 continue;
             }
             commandBuilder.add(new LoadAnimeCommand(aStream, anime.id));
+            toUpdate.push(anime.id);
         }
+
+        if (toUpdate.length == 0) {
+            LOGGER.warn("Nothing to update");
+            callback();
+            return;
+        }
+
+        LOGGER.debug("Scheduling for update: [{0}]", toUpdate);
 
         commandBuilder.skipErrors().skipCancellations().
                 allResults(onEveryResult).
@@ -54,7 +64,7 @@ public class UpdateAnimeListCommand {
 
                 var originalEpisodesLength:int = original.episodes ? original.episodes.length : 0;
                 var animeEpisodesLength:int = anime.episodes ? anime.episodes.length : 0;
-                var differs:Boolean = originalEpisodesLength != animeEpisodesLength;
+                var episodeUpdated:Boolean = originalEpisodesLength != animeEpisodesLength;
 
                 for each (episode in anime.episodes) {
                     var originalEp:Episode = episodes.get(episode.id);
@@ -64,29 +74,29 @@ public class UpdateAnimeListCommand {
 
                         if (episodeUpdate > originalEpUpdate) {
                             episode.status = originalEp.status;
-                            differs = true;
+                            episodeUpdated = true;
                         }
                     } else {
-                        differs = true;
+                        episodeUpdated = true;
                     }
                 }
 
-                if (differs) {
-                    //TODO need better mechanism
-                    original.type = anime.type;
-                    original.episodeCount = anime.episodeCount;
-                    original.startDate = anime.startDate;
-                    original.endDate = anime.endDate;
+                //TODO need better mechanism
+                if (episodeUpdated) {
+                    LOGGER.debug("Update found for: {0}", anime.id);
                     original.episodes = anime.episodes;
-                    original.titles = anime.titles;
-                    original.relatedAnimeList = anime.relatedAnimeList;
-                    original.description = anime.description;
-                    original.picture = anime.picture;
-                    original.episodes = anime.episodes;
-
-                    updated = true;
+                    animeUpdated = true;
                 }
 
+                original.type = anime.type;
+                original.episodeCount = anime.episodeCount;
+                original.startDate = anime.startDate;
+                original.endDate = anime.endDate;
+                original.titles = anime.titles;
+                original.relatedAnimeList = anime.relatedAnimeList;
+                original.description = anime.description;
+                original.picture = anime.picture;
+                original.episodes = anime.episodes;
 
                 break;
             }
@@ -94,7 +104,7 @@ public class UpdateAnimeListCommand {
     }
 
     private function onLastResult(data:Object):void {
-        callback(updated);
+        callback(animeUpdated);
     }
 }
 }

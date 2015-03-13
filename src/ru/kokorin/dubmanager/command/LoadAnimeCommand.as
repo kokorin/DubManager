@@ -16,6 +16,9 @@ import ru.kokorin.astream.AStream;
 
 import ru.kokorin.astream.AStream;
 import ru.kokorin.dubmanager.domain.Anime;
+import ru.kokorin.dubmanager.domain.AnimeStatus;
+import ru.kokorin.dubmanager.domain.Episode;
+import ru.kokorin.dubmanager.domain.EpisodeStatus;
 import ru.kokorin.dubmanager.event.AnimeEvent;
 import ru.kokorin.util.LogUtil;
 import ru.kokorin.util.XmlUtil;
@@ -53,8 +56,7 @@ public class LoadAnimeCommand {
                     var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
                     fileStream.close();
 
-                    xmlString = XmlUtil.replaceXmlNamespace(xmlString);
-                    const anime = aStream.fromXML(XML(xmlString)) as Anime;
+                    const anime:Anime = loadFromString(xmlString);
 
                     callback(anime);
                     return;
@@ -92,14 +94,17 @@ public class LoadAnimeCommand {
             xmlFile.parent.createDirectory();
         }
 
-        const fileStream:FileStream = new FileStream();
-        fileStream.open(xmlFile, FileMode.WRITE);
-        fileStream.writeUTFBytes(xmlString);
-        fileStream.close();
-        LOGGER.info("Data written to file: {0}", xmlFile.url);
+        try {
+            const fileStream:FileStream = new FileStream();
+            fileStream.open(xmlFile, FileMode.WRITE);
+            fileStream.writeUTFBytes(xmlString);
+            fileStream.close();
+            LOGGER.info("Data written to file: {0}", xmlFile.url);
+        } catch (error:Error) {
+            LOGGER.warn(error.getStackTrace());
+        }
 
-        xmlString = XmlUtil.replaceXmlNamespace(xmlString);
-        const anime:Anime = aStream.fromXML(XML(xmlString)) as Anime;
+        const anime:Anime = loadFromString(xmlString);
 
         callback(anime);
     }
@@ -107,6 +112,20 @@ public class LoadAnimeCommand {
     private function onLoadError(event:ErrorEvent):void {
         LOGGER.error("Load error: {0}: {1}", event.errorID, event.text);
         callback(new Error(event.text, event.errorID));
+    }
+
+    private function loadFromString(xmlString:String):Anime {
+        xmlString = XmlUtil.replaceXmlNamespace(xmlString);
+        const result:Anime = aStream.fromXML(XML(xmlString)) as Anime;
+
+        if (result) {
+            result.status = AnimeStatus.NOT_STARTED;
+            for each (var episode:Episode in result.episodes) {
+                episode.status = EpisodeStatus.NOT_STARTED;
+            }
+        }
+
+        return result;
     }
 }
 }

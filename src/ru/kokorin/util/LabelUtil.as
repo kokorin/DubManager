@@ -40,6 +40,19 @@ public class LabelUtil {
         return (titles[0] as Title).text;
     }
 
+    public static function compareByTitle(item1:Object, item2:Object, column:Object = null):int {
+        const title1:String = getTitle(item1, column);
+        const title2:String = getTitle(item2, column);
+
+        if(title1 < title2) {
+            return -1;
+        }
+        if (title1 == title2) {
+            return 0;
+        }
+        return 1;
+    }
+
     public static function getEnumLabel(item:Object, column:Object = null):String {
         var result:String = "";
         item = getProperty(item, column);
