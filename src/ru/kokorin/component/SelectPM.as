@@ -10,12 +10,15 @@ import mx.collections.ListCollectionView;
 
 import org.apache.flex.collections.VectorCollection;
 
+import spark.collections.Sort;
+
 [Event(name="open", type="flash.events.Event")]
 [Event(name="close", type="flash.events.Event")]
 [Event(name="select", type="ru.kokorin.component.SelectEvent")]
 public class SelectPM extends EventDispatcher {
     private var _items:ListCollectionView;
     private var _filterText:String;
+    private var _filterWords:Array;
     private var updateFilterTimeout:uint = 0;
 
     public function SelectPM() {
@@ -55,7 +58,9 @@ public class SelectPM extends EventDispatcher {
         }
         _items = collection;
         if (_items) {
-            _items.filterFunction = filterItem;
+            _items.filterFunction = filterFunction;
+            _items.sort = new Sort();
+            _items.sort.compareFunction = compareFunction;
         }
 
         updateFilterLater();
@@ -79,7 +84,21 @@ public class SelectPM extends EventDispatcher {
 
     public function set filterText(value:String):void {
         _filterText = value;
+        _filterWords = null;
         updateFilterLater();
+    }
+
+    protected function get filterWords():Array {
+        if (!_filterWords && _filterText) {
+            _filterWords = _filterText.split(" ").
+                    filter(function (word:String, ...rest):Boolean {
+                        return word && word.length;
+                    }).
+                    map(function (word:String, ...rest):String {
+                        return word.toLowerCase();
+                    });
+        }
+        return _filterWords;
     }
 
     private function updateFilterLater():void {
@@ -96,8 +115,12 @@ public class SelectPM extends EventDispatcher {
         }
     }
 
-    protected function filterItem(item:Object):Boolean {
+    protected function filterFunction(item:Object):Boolean {
         return true;
+    }
+
+    protected function compareFunction(item1:Object, item2:Object, fields:Array = null):int {
+        return 0;
     }
 
     public function select(item:Object):void {

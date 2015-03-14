@@ -13,6 +13,9 @@ public class Episode implements ITitled{
     [AStreamConverter("ru.kokorin.astream.converter.DateConverter", params="yyyy-MM-dd")]
     public var update:Date;
 
+    /**
+     * @see http://wiki.anidb.net/w/Content:Episodes#Episode_Names_.28English.29
+     */
     [AStreamAlias("epno")]
     [AStreamOrder(10)]
     public var number:String;
