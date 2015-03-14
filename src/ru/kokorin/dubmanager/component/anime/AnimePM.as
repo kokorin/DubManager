@@ -3,6 +3,8 @@ import mx.collections.ArrayCollection;
 
 import ru.kokorin.component.EditPM;
 import ru.kokorin.dubmanager.domain.Anime;
+import ru.kokorin.dubmanager.domain.Episode;
+import ru.kokorin.dubmanager.domain.EpisodeStatus;
 
 public class AnimePM extends EditPM {
     public function AnimePM() {
@@ -13,6 +15,12 @@ public class AnimePM extends EditPM {
     [Bindable(event="close")]
     public function get anime():Anime {
         return item as Anime;
+    }
+
+    public function setStatus(status:EpisodeStatus, episodes:Vector.<Object>):void {
+        for each (var episode:Episode in episodes) {
+            episode.status = status;
+        }
     }
 
     public function saveEpisode(episode:Object, original:Object):void {

@@ -21,7 +21,7 @@
 
         <serial:AnimeSelectPM id="animeSelectPM">
             <serial:select><![CDATA[
-                    model.loadAnime(event.item as Anime, function (anime:Anime) {
+                    model.loadAnime(event.item as Anime, function (anime:Anime):void {
                         animePM.open(anime, true);
                     });
                 ]]></serial:select>
@@ -216,7 +216,6 @@
                   click="{askRemove(dg.selectedItems)}" enabled="{dg.selectedItem}"/>
     </s:HGroup>
 
-    <!--TODO Sort by TITLES!!!-->
     <s:DataGrid id="dg" width="100%" height="100%"
                 dataProvider="{model.animeList}"
                 itemRenderer="ru.kokorin.dubmanager.renderer.AnimeGridRenderer"

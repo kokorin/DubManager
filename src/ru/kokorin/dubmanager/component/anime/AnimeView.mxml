@@ -4,7 +4,7 @@
                     xmlns:mx="library://ns.adobe.com/flex/mx"
                     xmlns:component="ru.kokorin.component.*"
                     xmlns:episode="ru.kokorin.dubmanager.component.episode.*"
-                    xmlns:parsley="http://www.spicefactory.org/parsley">
+                    xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:display="flash.display.*">
 
     <component:title>{resourceManager.getString('component', 'anime')}{changeTracker.changed?' *':''}</component:title>
 
@@ -20,7 +20,19 @@
             <episode:EpisodeView model="{episodePM}"/>
         </parsley:PopUp>
 
+        <!--TODO move dateTimePattern to locale-specific property-files-->
         <s:DateTimeFormatter id="dtFormatter" dateTimePattern="EE, dd MMM yyyy"/>
+
+        <display:NativeMenu id="rightClickMenu">
+            <display:items>
+                <display:NativeMenuItem label="{LabelUtil.getEnumLabel(EpisodeStatus.COMPLETE)}"
+                                        enabled="{canSwitchTo(EpisodeStatus.COMPLETE, dg.selectedItems)}"
+                                        select="{model.setStatus(EpisodeStatus.COMPLETE, dg.selectedItems)}"/>
+                <display:NativeMenuItem label="{LabelUtil.getEnumLabel(EpisodeStatus.NOT_STARTED)}"
+                                        enabled="{canSwitchTo(EpisodeStatus.NOT_STARTED, dg.selectedItems)}"
+                                        select="{model.setStatus(EpisodeStatus.NOT_STARTED, dg.selectedItems)}"/>
+            </display:items>
+        </display:NativeMenu>
     </fx:Declarations>
     <fx:Script>
 		<![CDATA[
@@ -54,7 +66,7 @@
             var lastEpisode:Episode;
             var lastNumber:Number = Number.MAX_VALUE;
             for each (var episode:Episode in model.anime.episodes) {
-                var episodeNumber = parseInt(episode.number);
+                var episodeNumber:Number = parseInt(episode.number);
                 if (isNaN(episodeNumber)) {
                     continue;
                 }
@@ -81,6 +93,26 @@
 
         private function itemDoubleClick(event:MouseEvent, item:Object):void {
             episodePM.open(item);
+        }
+
+        private function itemRightClick(event:MouseEvent, item:Object):void {
+            if (!dg.selectedItems || dg.selectedItems.indexOf(item) == -1) {
+                dg.selectedItem = item;
+            }
+            rightClickMenu.display(stage, event.stageX, event.stageY);
+        }
+
+        private static function canSwitchTo(status:EpisodeStatus, episodes:Vector.<Object>):Boolean {
+            var result:Boolean = false;
+
+            for each (var episode:Episode in episodes) {
+                if (episode.status != status) {
+                    result = true;
+                    break;
+                }
+            }
+
+            return result;
         }
         ]]>
 	</fx:Script>
@@ -163,6 +195,8 @@
                     <s:DataGrid id="dg" width="100%" height="100%" dataProvider="{model.anime.episodes}"
                                 doubleClickEnabled="true" doubleClickMode="row"
                                 doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}"
+                                rightClick="{RendererUtil.onRenderer(event, itemRightClick)}"
+                                selectionMode="multipleRows"
                                 multiColumnSortingEnabled="true">
                         <s:columns>
                             <s:ArrayList>

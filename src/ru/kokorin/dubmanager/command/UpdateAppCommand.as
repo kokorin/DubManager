@@ -68,7 +68,7 @@ public class UpdateAppCommand {
                 updateVersion = releaseVersion;
                 updateWeight = releaseWeight;
                 for each (var asset:Object in release.assets) {
-                    //TODO handle case of multiple assets
+                    //how to handle case of multiple assets?
                     updateUrl = String(asset.browser_download_url);
                     break;
                 }
