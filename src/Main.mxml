@@ -24,7 +24,7 @@
             <parsley:Inject property="workspacePM" type="{WorkspacePM}"/>
         </parsley:FastInject>
 
-        <s:TraceTarget includeCategory="true" includeLevel="true" includeTime="true"/>
+        <s:TraceTarget includeCategory="true" includeLevel="true" includeTime="true" filters="{['ru.*']}"/>
         <util:FileTarget includeCategory="true" includeLevel="true" includeDate="true" includeTime="true"/>
     </fx:Declarations>
     <fx:Script>
@@ -40,8 +40,6 @@
         private function onContextComplete(event:FlexContextEvent):void {
             event.context.scopeManager.dispatchMessage(new AnimeEvent(AnimeEvent.LOAD_DATA));
             event.context.scopeManager.dispatchMessage(new AppEvent(AppEvent.UPDATE));
-            //TODO preserve sort order
-            //TODO it seems that memory allocated for Vector is not get free by GC
             //TODO add try-catch to every file and parse operations
         }
 

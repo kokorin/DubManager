@@ -17,8 +17,8 @@ public class SaveDataCommand {
 
     public function execute(event:AnimeEvent):void {
         try {
-            LOGGER.debug("Saving {0} items", event.animeList.length);
-            const xml:XML = aStream.toXML(event.animeList);
+            LOGGER.debug("Saving {0} items", event.data.animeList.length);
+            const xml:XML = aStream.toXML(event.data);
             const xmlFile:File = File.applicationStorageDirectory.resolvePath("data.xml");
             const fileStream:FileStream = new FileStream();
             fileStream.open(xmlFile, FileMode.WRITE);

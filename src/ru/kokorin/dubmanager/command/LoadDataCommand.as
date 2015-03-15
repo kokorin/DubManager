@@ -17,6 +17,7 @@ import ru.kokorin.astream.converter.EnumConverter;
 import ru.kokorin.dubmanager.domain.Anime;
 import ru.kokorin.dubmanager.domain.AnimeStatus;
 import ru.kokorin.dubmanager.domain.AnimeType;
+import ru.kokorin.dubmanager.domain.Data;
 import ru.kokorin.dubmanager.domain.Episode;
 import ru.kokorin.dubmanager.domain.EpisodeStatus;
 import ru.kokorin.dubmanager.domain.Title;
@@ -28,8 +29,8 @@ public class LoadDataCommand {
 
     private static const LOGGER:ILogger = LogUtil.getLogger(LoadDataCommand);
 
-    public function execute(event:Event):Vector.<Anime> {
-        var result:Vector.<Anime>;
+    public function execute(event:Event):Data {
+        var result:Data;
         try {
             result = loadData();
             if (!result) {
@@ -38,14 +39,18 @@ public class LoadDataCommand {
             if (!result) {
                 result = deprecated_load_from_db();
             }
+            if (!result) {
+                result = new Data();
+                result.animeList = new ArrayCollection();
+            }
         } catch (error:Error) {
             LOGGER.error(error.getStackTrace());
         }
         return result;
     }
 
-    private function loadData():Vector.<Anime> {
-        var result:Vector.<Anime> = null;
+    private function loadData():Data {
+        var result:Data = null;
 
         const xmlFile:File = File.applicationStorageDirectory.resolvePath("data.xml");
         if (xmlFile.exists) {
@@ -56,13 +61,15 @@ public class LoadDataCommand {
             fileStream.close();
             const xml:XML = new XML(xmlString);
 
-            result = aStream.fromXML(xml) as Vector.<Anime>;
+            result = aStream.fromXML(xml) as Data;
         }
 
         //TODO remove in 0.4.0
-        for each (var anime:Anime in result) {
-            if (anime.id == 0) {
-                anime.id = NaN;
+        if (result) {
+            for each (var anime:Anime in result.animeList) {
+                if (anime.id == 0) {
+                    anime.id = NaN;
+                }
             }
         }
 
@@ -70,12 +77,13 @@ public class LoadDataCommand {
     }
 
     [Deprecated(since="0.4.0", message="will be removed in 0.4.0 release")]
-    private function deprecated_load_from_xml():Vector.<Anime> {
-        var result:Vector.<Anime> = null;
+    private function deprecated_load_from_xml():Data {
+        var result:Data = null;
 
         const xmlFile:File = File.applicationStorageDirectory.resolvePath("serials.xml");
         if (xmlFile.exists) {
-            result = new Vector.<Anime>();
+            result = new Data();
+            result.animeList = new ArrayCollection();
             LOGGER.debug("Loading from XML-file: {0}", xmlFile.nativePath);
             const fileStream:FileStream = new FileStream();
             fileStream.open(xmlFile, FileMode.READ);
@@ -124,7 +132,7 @@ public class LoadDataCommand {
                     anime.episodes.addItem(episode);
                 }
 
-                result.push(anime);
+                result.animeList.addItem(anime);
             }
         }
 
@@ -135,8 +143,8 @@ public class LoadDataCommand {
     private static const SELECT_SUBITEMS_FOR_ITEM:String = "SELECT * FROM DubSubItem WHERE dubItemID = :dubItemID";
 
     [Deprecated(since="0.4.0", message="will be removed in 0.4.0 release")]
-    private function deprecated_load_from_db():Vector.<Anime> {
-        var result:Vector.<Anime> = null;
+    private function deprecated_load_from_db():Data {
+        var result:Data = null;
 
         const dbFile:File = File.applicationStorageDirectory.resolvePath("dub-manager.db");
         if (dbFile.exists) {
@@ -154,9 +162,10 @@ public class LoadDataCommand {
             for each(var item:Object in items) {
                 var anime:Anime = db_parseAnime(item);
                 if (!result) {
-                    result = new Vector.<Anime>();
+                    result = new Data();
+                    result.animeList = new ArrayCollection();
                 }
-                result.push(anime);
+                result.animeList.addItem(anime);
 
                 var subItemsStm:SQLStatement = new SQLStatement();
                 subItemsStm.sqlConnection = conn;

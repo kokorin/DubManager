@@ -217,7 +217,7 @@
     </s:HGroup>
 
     <s:DataGrid id="dg" width="100%" height="100%"
-                dataProvider="{model.animeList}"
+                dataProvider="{model.data.animeList}"
                 itemRenderer="ru.kokorin.dubmanager.renderer.AnimeGridRenderer"
                 doubleClickEnabled="true" doubleClickMode="row"
                 doubleClick="{RendererUtil.onRenderer(event, itemDoubleClick)}"

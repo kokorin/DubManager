@@ -3,9 +3,10 @@ import flash.events.Event;
 import flash.events.EventDispatcher;
 import flash.utils.setTimeout;
 
-import org.apache.flex.collections.VectorCollection;
+import mx.collections.ArrayCollection;
 
 import ru.kokorin.dubmanager.domain.Anime;
+import ru.kokorin.dubmanager.domain.Data;
 import ru.kokorin.dubmanager.event.AnimeEvent;
 
 [Event(name="updateList", type="ru.kokorin.dubmanager.event.AnimeEvent")]
@@ -14,7 +15,7 @@ import ru.kokorin.dubmanager.event.AnimeEvent;
 [Event(name="loadTitles", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 public class WorkspacePM extends EventDispatcher {
     [Bindable]
-    public var animeList:VectorCollection;
+    public var data:Data;
     [Bindable]
     public var isLoadingAnime:Boolean;
     [Bindable]
@@ -23,29 +24,32 @@ public class WorkspacePM extends EventDispatcher {
     private var loadAnimeCallback:Function;
     private var loadAnimeTitlesCallback:Function;
 
-    public function onLoadDataResult(result:Vector.<Anime>, event:Event):void {
+    public function onLoadDataResult(result:Data, event:Event):void {
         if (!result) {
-            result = new Vector.<Anime>();
+            result = new Data();
         }
-        animeList = new VectorCollection(result);
+        if (!result.animeList) {
+            result.animeList = new ArrayCollection();
+        }
+        data = result;
         setTimeout(updateAnimeList, 5000);
     }
 
     public function saveAnime(anime:Object, original:Object):void {
-        const index:int = animeList.getItemIndex(original);
+        const index:int = data.animeList.getItemIndex(original);
         if (index == -1) {
-            animeList.addItem(anime);
+            data.animeList.addItem(anime);
         } else {
-            animeList.setItemAt(anime, index);
+            data.animeList.setItemAt(anime, index);
         }
         saveData();
     }
 
     public function removeAnime(toRemove:Vector.<Object>):void {
         for each (var anime:Anime in toRemove) {
-            const index:int = animeList.getItemIndex(anime);
+            const index:int = data.animeList.getItemIndex(anime);
             if (index != -1) {
-                animeList.removeItemAt(index);
+                data.animeList.removeItemAt(index);
             }
         }
         saveData();
@@ -72,29 +76,23 @@ public class WorkspacePM extends EventDispatcher {
         dispatchEvent(event);
     }
 
-    public function onLoadAnimeTitlesResult(animeList:Vector.<Anime>, event:Event):void {
+    public function onLoadAnimeTitlesResult(animeTitles:ArrayCollection, event:Event):void {
         if (loadAnimeTitlesCallback != null) {
-            loadAnimeTitlesCallback(animeList);
+            loadAnimeTitlesCallback(animeTitles);
             loadAnimeTitlesCallback = null;
         }
     }
 
     private function saveData():void {
         const event:AnimeEvent = new AnimeEvent(AnimeEvent.SAVE_DATA);
-        event.animeList = animeList.source as Vector.<Anime>;
+        event.data = data;
         dispatchEvent(event);
     }
 
     private function updateAnimeList():void {
         const event:AnimeEvent = new AnimeEvent(AnimeEvent.UPDATE_LIST);
-        event.animeList = animeList.source as Vector.<Anime>;
+        event.data = data;
         dispatchEvent(event);
-    }
-
-    public function onUpdateAnimeListResult(result:Boolean, event:Event):void {
-        if (result) {
-            animeList = new VectorCollection(animeList.source);
-        }
     }
 }
 }

@@ -9,6 +9,8 @@ import flash.filesystem.FileStream;
 import flash.net.URLLoader;
 import flash.net.URLRequest;
 
+import mx.collections.ArrayCollection;
+
 import mx.logging.ILogger;
 
 import org.spicefactory.lib.reflect.ClassInfo;
@@ -36,7 +38,7 @@ public class LoadAnimeTitlesCommand {
         if (xmlFile.exists && xmlFile.size > 10 &&
                 xmlFile.modificationDate.time > weekAgo.time &&
                 xmlFile.creationDate.time > weekAgo.time) {
-            const result:Vector.<Anime> = loadFromFile(xmlFile);
+            const result:ArrayCollection = loadFromFile(xmlFile);
             callback(result);
             return;
         }
@@ -68,17 +70,17 @@ public class LoadAnimeTitlesCommand {
             LOGGER.error(error.getStackTrace());
         }
 
-        const result:Vector.<Anime> = loadFromString(xmlString);
+        const result:ArrayCollection = loadFromString(xmlString);
         callback(result);
     }
 
     private function onLoadError(event:ErrorEvent):void {
         LOGGER.error("Load error: {0}: {1}", event.errorID, event.text);
-        const result:Vector.<Anime> = loadFromFile(xmlFile);
+        const result:ArrayCollection = loadFromFile(xmlFile);
         callback(result);
     }
 
-    private static function loadFromFile(xmlFile:File):Vector.<Anime> {
+    private static function loadFromFile(xmlFile:File):ArrayCollection {
         try {
             if (xmlFile.exists) {
                 LOGGER.debug("Loading from XML-file: {0}", xmlFile.nativePath);
@@ -95,8 +97,8 @@ public class LoadAnimeTitlesCommand {
         return null;
     }
 
-    private static function loadFromString(xmlString:String):Vector.<Anime> {
-        const result:Vector.<Anime> = new Vector.<Anime>();
+    private static function loadFromString(xmlString:String):ArrayCollection {
+        const result:Array = new Array();
 
         try {
             //TODO use xml namespace
@@ -128,7 +130,7 @@ public class LoadAnimeTitlesCommand {
             LOGGER.error(error.getStackTrace());
         }
 
-        return result;
+        return new ArrayCollection(result);
     }
 }
 }

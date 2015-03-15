@@ -10,9 +10,9 @@ import flash.net.URLLoader;
 import flash.net.URLRequest;
 import flash.net.URLVariables;
 
+import mx.collections.Sort;
+import mx.collections.SortField;
 import mx.logging.ILogger;
-
-import ru.kokorin.astream.AStream;
 
 import ru.kokorin.astream.AStream;
 import ru.kokorin.dubmanager.domain.Anime;
@@ -47,7 +47,8 @@ public class LoadAnimeCommand {
             var weekAgo:Date = new Date();
             weekAgo.date -= 7;
 
-            if (xmlFile.modificationDate.time > weekAgo.time &&
+            LOGGER.debug("creationDate: {0}, modificationDate: {1}", xmlFile.creationDate, xmlFile.modificationDate);
+            if (xmlFile.modificationDate.time > weekAgo.time ||
                     xmlFile.creationDate.time > weekAgo.time) {
                 try {
                     LOGGER.debug("Loading data from file: {0}", xmlFile.url);
@@ -65,6 +66,8 @@ public class LoadAnimeCommand {
                 }
             }
             LOGGER.debug("XML data is possibly obsolete");
+        } else {
+            LOGGER.debug("File does not exist: {0}", xmlFile.url);
         }
 
         const loader:URLLoader = new URLLoader();
@@ -120,8 +123,14 @@ public class LoadAnimeCommand {
 
         if (result) {
             result.status = AnimeStatus.NOT_STARTED;
-            for each (var episode:Episode in result.episodes) {
-                episode.status = EpisodeStatus.NOT_STARTED;
+            if (result.episodes) {
+                for each (var episode:Episode in result.episodes) {
+                    episode.status = EpisodeStatus.NOT_STARTED;
+                }
+                const sort:Sort = new Sort();
+                sort.fields = [new SortField("number", false, false, true)];
+                result.episodes.sort = sort;
+                result.episodes.refresh();
             }
         }
 

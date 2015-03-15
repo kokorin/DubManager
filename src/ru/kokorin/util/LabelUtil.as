@@ -62,6 +62,9 @@ public class LabelUtil {
 
             result = ResourceManager.getInstance().getString(clazzName, propertyName);
         }
+        if (!result) {
+            result = String(item);
+        }
         return result;
     }
 

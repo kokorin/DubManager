@@ -16,8 +16,6 @@
                                    method="onLoadAnimeResult"/>
             <parsley:CommandResult selector="{AnimeEvent.LOAD_TITLES}" type="{AnimeEvent}"
                                    method="onLoadAnimeTitlesResult"/>
-            <parsley:CommandResult selector="{AnimeEvent.UPDATE_LIST}" type="{AnimeEvent}"
-                                   method="onUpdateAnimeListResult"/>
         </parsley:Object>
 
 
@@ -65,16 +63,15 @@
         import ru.kokorin.dubmanager.command.UpdateAnimeListCommand;
         import ru.kokorin.dubmanager.command.UpdateAppCommand;
         import ru.kokorin.dubmanager.component.workspace.WorkspacePM;
-        import ru.kokorin.dubmanager.domain.Anime;
+        import ru.kokorin.dubmanager.domain.Data;
         import ru.kokorin.dubmanager.event.AnimeEvent;
         import ru.kokorin.dubmanager.event.AppEvent;
 
         public var aStream:AStream = function ():AStream {
             const result:AStream = new AStream();
             result.mode = AStreamMode.NO_REFERENCES;
+            result.processMetadata(Data);
             result.autodetectMetadata(true);
-            result.alias("data", Vector.<Anime>);
-            result.processMetadata(Anime);
             return result;
         }();
         ]]>
