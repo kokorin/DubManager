@@ -38,5 +38,11 @@ public class Episode implements ITitled{
     [ArrayElementType("ru.kokorin.astream.converter.DateConverter")]
     public function Episode() {
     }
+
+    //TODO add EpisodeType
+    public static function FILTER_NORMAL_EPISODES(episode:Episode, ...rest):Boolean {
+        const number:Number = parseFloat(episode.number);
+        return !isNaN(number);
+    }
 }
 }

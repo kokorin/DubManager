@@ -130,6 +130,7 @@ public class LoadAnimeCommand {
                 const sort:Sort = new Sort();
                 sort.fields = [new SortField("number", false, false, true)];
                 result.episodes.sort = sort;
+                result.episodes.filterFunction = Episode.FILTER_NORMAL_EPISODES;
                 result.episodes.refresh();
             }
         }

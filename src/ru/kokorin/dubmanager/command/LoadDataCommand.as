@@ -70,6 +70,10 @@ public class LoadDataCommand {
                 if (anime.id == 0) {
                     anime.id = NaN;
                 }
+                if (anime.episodes) {
+                    anime.episodes.filterFunction = Episode.FILTER_NORMAL_EPISODES;
+                    anime.episodes.refresh();
+                }
             }
         }
 

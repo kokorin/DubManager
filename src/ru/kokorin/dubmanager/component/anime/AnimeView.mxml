@@ -61,7 +61,6 @@
         }
 
 
-        [Deprecated(since="0.4.0", message="will be removed in 0.4.0 release")]
         private function createEpisode():void {
             var lastEpisode:Episode;
             var lastNumber:Number = Number.MAX_VALUE;
@@ -190,7 +189,8 @@
                         <s:Button width="100" label="{resourceManager.getString('component', 'edit')}"
                                   click="{episodePM.open(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
                         <s:Button width="100" label="{resourceManager.getString('component', 'remove')}"
-                                  click="{model.removeEpisode(dg.selectedItem)}" enabled="{dg.selectedItem}"/>
+                                  click="{model.removeEpisode(dg.selectedItem)}"
+                                  enabled="{dg.selectedItem &amp;&amp; isNaN((dg.selectedItem as Episode).id)}"/>
                     </s:HGroup>
                     <s:DataGrid id="dg" width="100%" height="100%" dataProvider="{model.anime.episodes}"
                                 doubleClickEnabled="true" doubleClickMode="row"

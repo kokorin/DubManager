@@ -5,7 +5,6 @@ import mx.logging.ILogger;
 import org.spicefactory.lib.collection.Map;
 import org.spicefactory.lib.command.builder.CommandGroupBuilder;
 import org.spicefactory.lib.command.builder.Commands;
-import org.spicefactory.lib.command.data.CommandData;
 import org.spicefactory.lib.reflect.ClassInfo;
 import org.spicefactory.lib.reflect.Property;
 
@@ -35,10 +34,10 @@ public class UpdateAnimeListCommand {
                 continue;
             }
             var loadCommand:Object = Commands.create(LoadAnimeCommand).
-                                                data(aStream).
-                                                data(anime.id).
-                                                result(onEveryResult).
-                                                build();
+                    data(aStream).
+                    data(anime.id).
+                    result(onEveryResult).
+                    build();
             commandBuilder.add(loadCommand);
 
             toUpdate.push(anime.id);
@@ -65,17 +64,7 @@ public class UpdateAnimeListCommand {
         LOGGER.debug("Loaded {0}", anime.id);
         for each (var original:Anime in animeList) {
             if (original.id == anime.id) {
-                var episodeStatuses:Map = new Map();
-
-                for each (var episode:Episode in original.episodes) {
-                    episodeStatuses.put(episode.id, episode.status);
-                }
-
-                for each (episode in anime.episodes) {
-                    if (episodeStatuses.containsKey(episode.id)) {
-                        episode.status = episodeStatuses.get(episode.id);
-                    }
-                }
+                anime.episodes = mergeEpisodes(original.episodes, anime.episodes);
                 anime.status = original.status;
 
                 for each (var property:Property in ANIME_CLASS_INFO.getProperties()) {
@@ -94,6 +83,46 @@ public class UpdateAnimeListCommand {
 
     private function onLastResult(data:Object):void {
         callback(true);
+    }
+
+    private static function mergeEpisodes(originals:ArrayCollection, episodes:ArrayCollection):ArrayCollection {
+        if (!episodes) {
+            episodes = new ArrayCollection();
+        }
+
+        //Map with episodes synchronized with anidb.net
+        const originalMap:Map = new Map();
+        //Map with episodes added by user himself
+        const manualMap:Map = new Map();
+
+        //Episodes whose id is NaN were added manually. Have to keep them.
+        for each (var original:Episode in originals) {
+            if (!isNaN(original.id)) {
+                originalMap.put(original.id, original);
+            } else {
+                manualMap.put(original.number, original);
+            }
+        }
+
+        for each (var episode:Episode in episodes) {
+            if (originalMap.containsKey(episode.id)) {
+                original = originalMap.get(episode.id) as Episode;
+            } else if (manualMap.containsKey(episode.number)) {
+                //If episode added by user and episode from anidb.net have the same number
+                //we will keep anidb's one.
+                original = manualMap.remove(episode.number) as Episode;
+            }
+
+            if (original) {
+                episode.status = original.status;
+            }
+        }
+
+        for each (original in manualMap.values) {
+            episodes.addItem(original);
+        }
+
+        return episodes;
     }
 }
 }

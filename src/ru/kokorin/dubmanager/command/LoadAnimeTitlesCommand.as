@@ -1,4 +1,8 @@
 package ru.kokorin.dubmanager.command {
+import avmplus.getQualifiedClassName;
+
+import com.probertson.utils.GZIPBytesEncoder;
+
 import flash.events.ErrorEvent;
 import flash.events.Event;
 import flash.events.IOErrorEvent;
@@ -7,10 +11,11 @@ import flash.filesystem.File;
 import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 import flash.net.URLLoader;
+import flash.net.URLLoaderDataFormat;
 import flash.net.URLRequest;
+import flash.utils.ByteArray;
 
 import mx.collections.ArrayCollection;
-
 import mx.logging.ILogger;
 
 import org.spicefactory.lib.reflect.ClassInfo;
@@ -32,18 +37,25 @@ public class LoadAnimeTitlesCommand {
     //TODO keep result of previous execution for some time
     public function execute(event:Event):void {
         xmlFile = File.applicationStorageDirectory.resolvePath("anime-titles.xml");
-        const weekAgo:Date = new Date();
-        weekAgo.date -= 7;
 
-        if (xmlFile.exists && xmlFile.size > 10 &&
-                xmlFile.modificationDate.time > weekAgo.time &&
-                xmlFile.creationDate.time > weekAgo.time) {
-            const result:ArrayCollection = loadFromFile(xmlFile);
-            callback(result);
-            return;
+        if (xmlFile.exists && xmlFile.size > 10) {
+            LOGGER.debug("{0} creationDate:{1}, modificationDate:{2}, ", xmlFile.url, xmlFile.creationDate, xmlFile.modificationDate);
+            const weekAgo:Date = new Date();
+            weekAgo.date -= 7;
+
+            if (xmlFile.modificationDate.time > weekAgo.time ||
+                    xmlFile.creationDate.time > weekAgo.time) {
+                const result:ArrayCollection = loadFromFile(xmlFile);
+                callback(result);
+                return;
+            }
+        } else {
+            LOGGER.warn("File does not exist: {0}", xmlFile.url);
         }
 
+        //It seems that on MacOS downloaded gzipped content is not decompressed automatically
         const loader:URLLoader = new URLLoader();
+        loader.dataFormat = URLLoaderDataFormat.BINARY;
         const request:URLRequest = new URLRequest("http://anidb.net/api/anime-titles.xml.gz");
         LOGGER.debug("Loading from {0}", request.url);
 
@@ -57,8 +69,23 @@ public class LoadAnimeTitlesCommand {
 
     private function onLoadComplete(event:Event):void {
         const loader:URLLoader = event.target as URLLoader;
-        LOGGER.info("Load complete: {0} bytes", loader.bytesLoaded);
-        const xmlString:String = String(loader.data);
+        LOGGER.info("Load complete: loaded {0} bytes, type {1}", loader.bytesLoaded, getQualifiedClassName(loader.data));
+
+        var xmlString:String = null;
+        var bytes:ByteArray = loader.data as ByteArray;
+        if (bytes) {
+            try {
+                //Trying to decompress
+                const gzEncoder:GZIPBytesEncoder = new GZIPBytesEncoder();
+                bytes = gzEncoder.uncompressToByteArray(bytes);
+                xmlString = String(bytes);
+            } catch (error:Error) {
+                LOGGER.warn("Failed to decompress: {0}", error.getStackTrace());
+            }
+        }
+        if (!xmlString) {
+            xmlString = String(loader.data);
+        }
 
         try {
             const fileStream:FileStream = new FileStream();
@@ -84,10 +111,12 @@ public class LoadAnimeTitlesCommand {
         try {
             if (xmlFile.exists) {
                 LOGGER.debug("Loading from XML-file: {0}", xmlFile.nativePath);
+
                 const fileStream:FileStream = new FileStream();
                 fileStream.open(xmlFile, FileMode.READ);
-                var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+                const xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
                 fileStream.close();
+
                 LOGGER.debug("XML-file loaded");
                 return loadFromString(xmlString);
             }
