@@ -21,9 +21,13 @@
         import ru.kokorin.dubmanager.domain.AnimeStatus;
         import ru.kokorin.dubmanager.domain.Episode;
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
+        import ru.kokorin.dubmanager.domain.EpisodeType;
+
+        private var stateExtension:String = "";
 
         override public function set data(value:Object):void {
             super.data = value;
+            stateExtension = getStateExtension(value as Anime);
             setCurrentState(getCurrentRendererState(), false);
         }
 
@@ -32,13 +36,24 @@
         override protected function getCurrentRendererState():String {
             var result:String = super.getCurrentRendererState();
 
-            const anime:Anime = data as Anime;
+            const extendedResult:String = result + stateExtension;
+            if (hasState(extendedResult)) {
+                result = extendedResult;
+            }
+
+            return result;
+        }
+
+        private static function getStateExtension(anime:Anime):String {
+            var result:String = "";
+
             if (anime && anime.status == AnimeStatus.IN_PROCESS) {
-                var nextEp:Date = new Date(2100, 0, 1);
+                var nextEpisodeTime:Number = Number.MAX_VALUE;
                 for each(var episode:Episode in anime.episodes) {
                     //Looking for latest completed episode
-                    if (episode.status == EpisodeStatus.NOT_STARTED && episode.airDate && episode.airDate.time < nextEp.time) {
-                        nextEp = episode.airDate;
+                    if (episode.status == EpisodeStatus.NOT_STARTED && episode.type == EpisodeType.REGULAR &&
+                            episode.airDate && episode.airDate.time < nextEpisodeTime) {
+                        nextEpisodeTime = episode.airDate.time;
                     }
                 }
 
@@ -49,10 +64,10 @@
                 const weekAgo:Date = new Date(today);
                 weekAgo.date -= 7;
 
-                if (nextEp.time < weekAgo.time) {
-                    result += "Overdue";
-                } else if (nextEp.time < today.time) {
-                    result += "Warn";
+                if (nextEpisodeTime < weekAgo.time) {
+                    result = "Overdue";
+                } else if (nextEpisodeTime < today.time) {
+                    result = "Warn";
                 }
             }
 
