@@ -20,6 +20,7 @@ import ru.kokorin.dubmanager.domain.AnimeStatus;
 import ru.kokorin.dubmanager.domain.Episode;
 import ru.kokorin.dubmanager.domain.EpisodeStatus;
 import ru.kokorin.dubmanager.event.AnimeEvent;
+import ru.kokorin.util.CompareUtil;
 import ru.kokorin.util.LogUtil;
 import ru.kokorin.util.XmlUtil;
 
@@ -44,12 +45,12 @@ public class LoadAnimeCommand {
         xmlFile = File.applicationStorageDirectory.resolvePath("anime/" + animeId + ".xml");
 
         if (xmlFile.exists && xmlFile.size > 10) {
-            var weekAgo:Date = new Date();
-            weekAgo.date -= 7;
+            var update:Date = new Date();
+            update.date -= 3;
 
             LOGGER.debug("creationDate: {0}, modificationDate: {1}", xmlFile.creationDate, xmlFile.modificationDate);
-            if (xmlFile.modificationDate.time > weekAgo.time ||
-                    xmlFile.creationDate.time > weekAgo.time) {
+            if (xmlFile.modificationDate.time > update.time ||
+                    xmlFile.creationDate.time > update.time) {
                 try {
                     LOGGER.debug("Loading data from file: {0}", xmlFile.url);
                     const fileStream:FileStream = new FileStream();
@@ -127,10 +128,17 @@ public class LoadAnimeCommand {
                 for each (var episode:Episode in result.episodes) {
                     episode.status = EpisodeStatus.NOT_STARTED;
                 }
+
+                const typeField:SortField = new SortField("type");
+                typeField.compareFunction = function(item1:Object, item2:Object):int {
+                    return CompareUtil.byEpisodeType(item1, item2, typeField.name);
+                }
+
+                const numberField:SortField = new SortField("number", false, false, true);
+
                 const sort:Sort = new Sort();
-                sort.fields = [new SortField("number", false, false, true)];
+                sort.fields = [typeField, numberField];
                 result.episodes.sort = sort;
-                result.episodes.filterFunction = Episode.FILTER_NORMAL_EPISODES;
                 result.episodes.refresh();
             }
         }

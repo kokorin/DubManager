@@ -7,6 +7,7 @@
                        width="800" height="600">
     <fx:Metadata>
         [ResourceBundle("AnimeType")]
+        [ResourceBundle("EpisodeType")]
         [ResourceBundle("AnimeStatus")]
         [ResourceBundle("EpisodeStatus")]
         [ResourceBundle("component")]

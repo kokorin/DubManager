@@ -68,6 +68,8 @@
         import ru.kokorin.dubmanager.domain.AnimeStatus;
         import ru.kokorin.dubmanager.domain.Episode;
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
+        import ru.kokorin.dubmanager.domain.EpisodeType;
+        import ru.kokorin.util.CompareUtil;
         import ru.kokorin.util.LabelUtil;
         import ru.kokorin.util.RendererUtil;
 
@@ -120,13 +122,14 @@
             if (aniDub && aniDub.status == AnimeStatus.IN_PROCESS) {
                 var current:Number = 0;
                 for each(var episode:Episode in aniDub.episodes) {
-                    var epNumber:Number = parseFloat(episode.number);
-                    //Looking for latest completed episode
-                    if (episode.status == EpisodeStatus.COMPLETE && current < epNumber) {
-                        current = epNumber;
+                    if (episode.status == EpisodeStatus.COMPLETE && episode.type == EpisodeType.REGULAR &&
+                                    current < episode.number) {
+                        current = episode.epno.number;
                     }
                 }
-                return current + "/" + aniDub.episodeCount;
+
+                var episodeCount:String = aniDub.episodeCount ? String(aniDub.episodeCount) : "??";
+                return current + "/" + episodeCount;
             }
             return "";
         }
@@ -159,21 +162,21 @@
         private static function getNextDate(anime:Anime):Date {
             var result:Date = null;
             if (anime && anime.status == AnimeStatus.IN_PROCESS) {
-                var hasEpisodes:Boolean = false;
+                var hasRegularEpisodes:Boolean = false;
 
                 for each(var episode:Episode in anime.episodes) {
-                    var epNumber:Number = parseFloat(episode.number);
-                    if (epNumber) {
-                        hasEpisodes = true;
-                    }
-                    //Looking for newest not_started episode
-                    if (episode.status == EpisodeStatus.NOT_STARTED && epNumber && episode.airDate &&
-                            (!result || result.time > episode.airDate.time)) {
-                        result = episode.airDate;
+                    if (episode.type == EpisodeType.REGULAR) {
+                        hasRegularEpisodes = true;
+
+                        //Looking for next not_started episode
+                        if (episode.status == EpisodeStatus.NOT_STARTED &&
+                                episode.airDate && (!result || result.time > episode.airDate.time)) {
+                            result = episode.airDate;
+                        }
                     }
                 }
 
-                if (!result && !hasEpisodes) {
+                if (!result && !hasRegularEpisodes) {
                     result = anime.startDate;
                 }
 
@@ -229,7 +232,7 @@
                 <s:GridColumn dataField="titles" percentWidth="40" showDataTips="{true}"
                               headerText="{resourceManager.getString('component', 'anime.title')}"
                               labelFunction="{LabelUtil.getTitle}" dataTipFunction="{LabelUtil.getTitle}"
-                              sortCompareFunction="{LabelUtil.compareByTitle}"/>
+                              sortCompareFunction="{CompareUtil.byTitle}"/>
                 <s:GridColumn dataField="type" width="80"
                               headerText="{resourceManager.getString('component', 'anime.type')}"
                               labelFunction="{LabelUtil.getEnumLabel}"/>

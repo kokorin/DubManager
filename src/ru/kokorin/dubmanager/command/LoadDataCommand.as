@@ -70,10 +70,6 @@ public class LoadDataCommand {
                 if (anime.id == 0) {
                     anime.id = NaN;
                 }
-                if (anime.episodes) {
-                    anime.episodes.filterFunction = Episode.FILTER_NORMAL_EPISODES;
-                    anime.episodes.refresh();
-                }
             }
         }
 
@@ -81,7 +77,7 @@ public class LoadDataCommand {
     }
 
     [Deprecated(since="0.4.0", message="will be removed in 0.4.0 release")]
-    private function deprecated_load_from_xml():Data {
+    private static function deprecated_load_from_xml():Data {
         var result:Data = null;
 
         const xmlFile:File = File.applicationStorageDirectory.resolvePath("serials.xml");
@@ -126,7 +122,7 @@ public class LoadDataCommand {
 
                 for each (var episodeXML:XML in serialXML.episodes.Episode) {
                     var episode:Episode = new Episode();
-                    episode.number = String(episodeXML.number);
+                    episode.number = parseInt(String(episodeXML.number));
                     episode.status = episodeStatusParser.fromString(String(episodeXML.status)) as EpisodeStatus;
                     episode.airDate = dateParser.fromString(String(episodeXML.date)) as Date;
 
@@ -147,7 +143,7 @@ public class LoadDataCommand {
     private static const SELECT_SUBITEMS_FOR_ITEM:String = "SELECT * FROM DubSubItem WHERE dubItemID = :dubItemID";
 
     [Deprecated(since="0.4.0", message="will be removed in 0.4.0 release")]
-    private function deprecated_load_from_db():Data {
+    private static function deprecated_load_from_db():Data {
         var result:Data = null;
 
         const dbFile:File = File.applicationStorageDirectory.resolvePath("dub-manager.db");
@@ -233,7 +229,7 @@ public class LoadDataCommand {
     private static function db_parseEpisode(item:Object):Episode {
         const result:Episode = new Episode();
 
-        result.number = String(item.number);
+        result.number = parseInt(String(item.number));
 
         const status:String = String(item.status);
         if (status == "notStarted") {

@@ -61,7 +61,7 @@ public class UpdateAnimeListCommand {
             LOGGER.warn("Failed to get Anime!");
             return;
         }
-        LOGGER.debug("Loaded {0}", anime.id);
+        LOGGER.debug("Loaded {0}, episodes: {1}", anime.id, anime.episodes ? anime.episodes.length : 0);
         for each (var original:Anime in animeList) {
             if (original.id == anime.id) {
                 anime.episodes = mergeEpisodes(original.episodes, anime.episodes);
@@ -75,7 +75,7 @@ public class UpdateAnimeListCommand {
                         }
                     }
                 }
-                LOGGER.debug("Updated {0}", anime.id);
+                LOGGER.debug("Updated {0}, episodes: {1}", original.id, original.episodes ? original.episodes.length : 0);
                 break;
             }
         }

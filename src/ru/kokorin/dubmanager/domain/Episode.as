@@ -13,13 +13,6 @@ public class Episode implements ITitled{
     [AStreamConverter("ru.kokorin.astream.converter.DateConverter", params="yyyy-MM-dd")]
     public var update:Date;
 
-    /**
-     * @see http://wiki.anidb.net/w/Content:Episodes#Episode_Names_.28English.29
-     */
-    [AStreamAlias("epno")]
-    [AStreamOrder(10)]
-    public var number:String;
-
     [AStreamAlias("airdate")]
     [AStreamOrder(20)]
     [AStreamConverter("ru.kokorin.astream.converter.DateConverter", params="yyyy-MM-dd")]
@@ -34,15 +27,57 @@ public class Episode implements ITitled{
     [AStreamOrder(20)]
     public var status:EpisodeStatus = EpisodeStatus.NOT_STARTED;
 
+    private var _epno:EpNo;
+
     //Force include
     [ArrayElementType("ru.kokorin.astream.converter.DateConverter")]
+    [ArrayElementType("ru.kokorin.dubmanager.xml.EpNoConverter")]
     public function Episode() {
     }
 
-    //TODO add EpisodeType
-    public static function FILTER_NORMAL_EPISODES(episode:Episode, ...rest):Boolean {
-        const number:Number = parseFloat(episode.number);
-        return !isNaN(number);
+    /**
+     * @private
+     */
+    [AStreamAlias("epno")]
+    [AStreamOrder(10)]
+    [AStreamConverter("ru.kokorin.dubmanager.xml.EpNoConverter")]
+    public function get epno():EpNo {
+        if (!_epno) {
+            _epno = new EpNo();
+        }
+        return _epno;
     }
+
+    public function set epno(value:EpNo):void {
+        if (!value) {
+            value = new EpNo();
+        }
+        _epno = value;
+    }
+
+    [AStreamOmitField]
+    public function get type():EpisodeType {
+        return epno.type;
+    }
+
+    public function set type(value:EpisodeType):void {
+        epno.type = value;
+    }
+
+
+    [AStreamOmitField]
+    public function get number():int {
+        return epno.number;
+    }
+
+    public function set number(value:int):void {
+        epno.number = value;
+    }
+
+
+    /*//TODO add EpisodeType
+    public static function FILTER_REGULAR_EPISODES(episode:Episode, ...rest):Boolean {
+        return episode.type == EpisodeType.REGULAR;
+    }*/
 }
 }

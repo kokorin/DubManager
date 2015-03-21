@@ -42,6 +42,8 @@
         import ru.kokorin.dubmanager.domain.AnimeStatus;
         import ru.kokorin.dubmanager.domain.Episode;
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
+        import ru.kokorin.dubmanager.domain.EpisodeType;
+        import ru.kokorin.util.CompareUtil;
         import ru.kokorin.util.LabelUtil;
         import ru.kokorin.util.RendererUtil;
 
@@ -63,28 +65,27 @@
 
         private function createEpisode():void {
             var lastEpisode:Episode;
-            var lastNumber:Number = Number.MAX_VALUE;
             for each (var episode:Episode in model.anime.episodes) {
-                var episodeNumber:Number = parseInt(episode.number);
-                if (isNaN(episodeNumber)) {
-                    continue;
-                }
-                if (!lastEpisode || lastNumber < episodeNumber) {
+                if (episode.type == EpisodeType.REGULAR && (!lastEpisode || lastEpisode.number < episode.number)) {
                     lastEpisode = episode;
-                    lastNumber = episodeNumber;
                 }
             }
 
             const newEpisode:Episode = new Episode();
             newEpisode.status = EpisodeStatus.NOT_STARTED;
+            newEpisode.type = EpisodeType.REGULAR;
 
             if (lastEpisode) {
-                newEpisode.number = String(lastNumber + 1);
+                newEpisode.number = lastEpisode.number + 1;
                 newEpisode.airDate = new Date(lastEpisode.airDate);
                 newEpisode.airDate.date += 7;
             } else {
-                newEpisode.number = "0";
-                newEpisode.airDate = new Date();
+                newEpisode.number = 1;
+                if (model.anime.startDate) {
+                    newEpisode.airDate = new Date(model.anime.startDate);
+                } else {
+                    newEpisode.airDate = new Date();
+                }
             }
 
             episodePM.open(newEpisode, true);
@@ -200,17 +201,21 @@
                                 multiColumnSortingEnabled="true">
                         <s:columns>
                             <s:ArrayList>
-                                <s:GridColumn dataField="number"
+                                <s:GridColumn dataField="number" percentWidth="10"
                                               headerText="{resourceManager.getString('component', 'episode.number')}"
                                               sortCompareType="{SortFieldCompareTypes.NUMERIC}"/>
-                                <s:GridColumn dataField="titles" visible="{!isNaN(model.anime.id)}"
+                                <s:GridColumn dataField="type" percentWidth="20"
+                                              labelFunction="{LabelUtil.getEnumLabel}"
+                                              headerText="{resourceManager.getString('component', 'episode.type')}"
+                                              sortCompareFunction="{CompareUtil.byEpisodeType}"/>
+                                <s:GridColumn dataField="titles" percentWidth="30" visible="{!isNaN(model.anime.id)}"
                                               labelFunction="{LabelUtil.getTitle}" dataTipFunction="{LabelUtil.getTitle}"
                                               headerText="{resourceManager.getString('component', 'episode.title')}"
-                                              sortCompareFunction="{LabelUtil.compareByTitle}"/>
-                                <s:GridColumn dataField="status"
+                                              sortCompareFunction="{CompareUtil.byTitle}"/>
+                                <s:GridColumn dataField="status" percentWidth="20"
                                               labelFunction="{LabelUtil.getEnumLabel}"
                                               headerText="{resourceManager.getString('component', 'episode.status')}"/>
-                                <s:GridColumn dataField="airDate" formatter="{dtFormatter}"
+                                <s:GridColumn dataField="airDate" percentWidth="20" formatter="{dtFormatter}"
                                               headerText="{resourceManager.getString('component', 'episode.date')}"/>
                             </s:ArrayList>
                         </s:columns>

@@ -3,7 +3,7 @@
                     xmlns:s="library://ns.adobe.com/flex/spark"
                     xmlns:mx="library://ns.adobe.com/flex/mx"
                     xmlns:component="ru.kokorin.component.*"
-                    maxHeight="200" maxWidth="400">
+                    maxHeight="240" maxWidth="400">
 	
 	<component:title>{resourceManager.getString('component', 'episode')}{changeTracker.changed?' *':''}</component:title>
 	<fx:Script>
@@ -28,9 +28,13 @@
 		<s:layout>
 			<s:FormLayout gap="-16" paddingLeft="-20" paddingRight="-20" paddingTop="-10" paddingBottom="-15"/>
 		</s:layout>
+
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.number')}">
-			<s:TextInput width="100" text="{model.episode.number}" editable="{isNaN(model.episode.id)}"
-                         change="{model.episode.number = (event.currentTarget as TextInput).text}"/>
+			<s:TextInput width="100" text="{model.episode.number}" editable="{isNaN(model.episode.id)}" restrict="0-9"
+                         change="{model.episode.number = parseInt((event.currentTarget as TextInput).text)}"/>
+		</s:FormItem>
+		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.type')}">
+			<s:TextInput width="100%" text="{LabelUtil.getEnumLabel(model.episode.type)}" editable="{false}"/>
 		</s:FormItem>
 		<s:FormItem width="100%" label="{resourceManager.getString('component', 'episode.title')}"
                     visible="{!isNaN(model.episode.id)}" includeInLayout="{!isNaN(model.episode.id)}">

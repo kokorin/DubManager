@@ -1,6 +1,7 @@
 package ru.kokorin.dubmanager.component.workspace {
 import flash.events.Event;
 import flash.events.EventDispatcher;
+import flash.utils.setInterval;
 import flash.utils.setTimeout;
 
 import mx.collections.ArrayCollection;
@@ -23,6 +24,11 @@ public class WorkspacePM extends EventDispatcher {
 
     private var loadAnimeCallback:Function;
     private var loadAnimeTitlesCallback:Function;
+    private var lastAnimeListUpdateTime:Number = 0;
+
+    public function WorkspacePM() {
+        setInterval(onInterval_updateAnimeList, 15*60*1000);
+    }
 
     public function onLoadDataResult(result:Data, event:Event):void {
         if (!result) {
@@ -32,7 +38,7 @@ public class WorkspacePM extends EventDispatcher {
             result.animeList = new ArrayCollection();
         }
         data = result;
-        setTimeout(updateAnimeList, 5000);
+        setTimeout(updateAnimeList, 3000);
     }
 
     public function saveAnime(anime:Object, original:Object):void {
@@ -89,10 +95,21 @@ public class WorkspacePM extends EventDispatcher {
         dispatchEvent(event);
     }
 
+    /* In case of hibernation or stand-by of OS*/
+    private function onInterval_updateAnimeList():void {
+        //Will try to update anime list twice a day
+        const update:Date = new Date();
+        update.hours -= 12;
+        if (lastAnimeListUpdateTime < update.time) {
+            updateAnimeList();
+        }
+    }
+
     private function updateAnimeList():void {
         const event:AnimeEvent = new AnimeEvent(AnimeEvent.UPDATE_LIST);
         event.data = data;
         dispatchEvent(event);
+        lastAnimeListUpdateTime = (new Date()).time;
     }
 }
 }
