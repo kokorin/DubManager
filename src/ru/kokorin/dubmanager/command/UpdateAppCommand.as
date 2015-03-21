@@ -20,6 +20,7 @@ import flash.utils.setTimeout;
 
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
+import mx.resources.IResourceManager;
 
 import mx.resources.ResourceManager;
 
@@ -66,6 +67,8 @@ public class UpdateAppCommand {
     }
 
     private function onLoadReleasesComplete(event:Event):void {
+        LOGGER.debug("Release data loaded");
+
         const urlLoader:URLLoader = event.target as URLLoader;
         urlLoader.removeEventListener(Event.COMPLETE, onLoadReleasesComplete);
 
@@ -107,10 +110,26 @@ public class UpdateAppCommand {
         }
 
         LOGGER.info("Asking to update to {0} : {1}", updateVersion, updateUrl);
-        var title:String = ResourceManager.getInstance().getString("component", "update.title");
-        var question:String = ResourceManager.getInstance().getString("component", "update.question", [updateVersion]);
-        Alert.show(question, title, Alert.YES | Alert.NO | Alert.CANCEL, null, onAnswer);
 
+        const yesLabel:String = Alert.YES_LABEL;
+        const noLabel:String = Alert.NO_LABEL;
+        const buttonWidth:Number = Alert.buttonWidth;
+
+        const resourceManager:IResourceManager = ResourceManager.getInstance();
+        const title:String = resourceManager.getString("component", "update.title");
+        const question:String = resourceManager.getString("component", "update.question", [updateVersion]);
+
+        Alert.YES_LABEL = resourceManager.getString("component", "update.yesNow");
+        Alert.NO_LABEL = resourceManager.getString("component", "update.noLater");
+        const customButtonWidth:Number = resourceManager.getNumber("component", "update.buttonWidth");
+        if (customButtonWidth > buttonWidth) {
+            Alert.buttonWidth = customButtonWidth;
+        }
+        Alert.show(question, title, Alert.YES | Alert.NO, null, onAnswer);
+
+        Alert.YES_LABEL = yesLabel;
+        Alert.NO_LABEL = noLabel;
+        Alert.buttonWidth = buttonWidth;
     }
 
     private function onAnswer(event:CloseEvent):void {
@@ -123,12 +142,6 @@ public class UpdateAppCommand {
         if (loadReleasesInterval) {
             clearInterval(loadReleasesInterval);
             loadReleasesInterval = 0;
-        }
-
-        if (event.detail == Alert.CANCEL) {
-            LOGGER.debug("Answer: CANCEL");
-            callback();
-            return;
         }
 
         LOGGER.debug("Answer: YES. Loading update");
