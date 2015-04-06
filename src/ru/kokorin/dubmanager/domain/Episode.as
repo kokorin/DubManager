@@ -73,11 +73,5 @@ public class Episode implements ITitled{
     public function set number(value:int):void {
         epno.number = value;
     }
-
-
-    /*//TODO add EpisodeType
-    public static function FILTER_REGULAR_EPISODES(episode:Episode, ...rest):Boolean {
-        return episode.type == EpisodeType.REGULAR;
-    }*/
 }
 }

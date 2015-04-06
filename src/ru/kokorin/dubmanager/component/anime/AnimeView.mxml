@@ -20,8 +20,8 @@
             <episode:EpisodeView model="{episodePM}"/>
         </parsley:PopUp>
 
-        <!--TODO move dateTimePattern to locale-specific property-files-->
-        <s:DateTimeFormatter id="dtFormatter" dateTimePattern="EE, dd MMM yyyy"/>
+        <s:DateTimeFormatter id="dtFormatter"
+                             dateTimePattern="{resourceManager.getString('component', 'dateTimePattern')}"/>
 
         <display:NativeMenu id="rightClickMenu">
             <display:items>

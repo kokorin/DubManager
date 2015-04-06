@@ -41,7 +41,8 @@
             <mx:ProgressBar width="300" indeterminate="true"/>
         </parsley:PopUp>
 
-        <s:DateTimeFormatter id="dtFormatter" dateTimePattern="EE, dd MMM yyyy"/>
+        <s:DateTimeFormatter id="dtFormatter"
+                             dateTimePattern="{resourceManager.getString('component', 'dateTimePattern')}"/>
 
         <display:NativeMenu id="rightClickMenu">
             <display:items>
@@ -78,7 +79,7 @@
         private var _model:WorkspacePM;
 
 
-        //TODO add load progress
+        //TODO add load and update progress
         private function onCC():void {
             setInterval(dg.invalidateDisplayList, 15 * 60 * 1000);
         }

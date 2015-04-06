@@ -130,14 +130,12 @@ public class LoadAnimeTitlesCommand {
         const result:Array = new Array();
 
         try {
-            //TODO use xml namespace
             xmlString = XmlUtil.replaceXmlNamespace(xmlString);
             LOGGER.debug("XML simplified");
 
             const xml:XML = new XML(xmlString);
             LOGGER.debug("DOM XML constructed");
 
-            //TODO TitleType.SYN in anime-titles.xml is TitleType.SYNONYM in anime.xml
             const typeConverter:Converter = new EnumConverter(ClassInfo.forClass(TitleType));
 
             //Manual parsing is up to 5 times faster
@@ -149,7 +147,14 @@ public class LoadAnimeTitlesCommand {
                     var title:Title = new Title();
                     title.text = String(titleXML.text());
                     title.lang = String(titleXML.xml_lang);
-                    title.type = typeConverter.fromString(String(titleXML.@type)) as TitleType;
+
+                    //in anime-titles.xml synonym (TitleType.SYNONYM) is shortened as syn
+                    var type:String = String(titleXML.@type);
+                    if (type == "syn") {
+                        title.type = TitleType.SYNONYM;
+                    } else {
+                        title.type = typeConverter.fromString(type) as TitleType;
+                    }
                     anime.titles.push(title);
                 }
                 result.push(anime);
