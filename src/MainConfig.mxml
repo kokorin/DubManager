@@ -21,13 +21,13 @@
 
         <parsley:MapCommand selector="{AnimeEvent.LOAD_DATA}" messageType="{AnimeEvent}">
             <parsley:Command type="{LoadDataCommand}">
-                <parsley:Property name="aStream" typeRef="{AStream}"/>
+                <parsley:Property name="aStream" value="{aStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
         <parsley:MapCommand selector="{AnimeEvent.SAVE_DATA}" messageType="{AnimeEvent}">
             <parsley:Command type="{SaveDataCommand}">
-                <parsley:Property name="aStream" typeRef="{AStream}"/>
+                <parsley:Property name="aStream" value="{aStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
@@ -37,13 +37,13 @@
 
         <parsley:MapCommand selector="{AnimeEvent.UPDATE_LIST}" messageType="{AnimeEvent}">
             <parsley:Command type="{UpdateAnimeListCommand}">
-                <parsley:Property name="aStream" typeRef="{AStream}"/>
+                <parsley:Property name="aStream" value="{aStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
         <parsley:MapCommand selector="{AnimeEvent.LOAD_ANIME}" messageType="{AnimeEvent}">
             <parsley:Command type="{LoadAnimeCommand}">
-                <parsley:Property name="aStream" typeRef="{AStream}"/>
+                <parsley:Property name="aStream" value="{aStream}"/>
             </parsley:Command>
         </parsley:MapCommand>
 
@@ -66,11 +66,14 @@
         import ru.kokorin.dubmanager.domain.Data;
         import ru.kokorin.dubmanager.event.AnimeEvent;
         import ru.kokorin.dubmanager.event.AppEvent;
+        import ru.kokorin.dubmanager.xml.ErrorConverter;
 
-        public var aStream:AStream = function ():AStream {
+        private static const aStream:AStream = function ():AStream {
             const result:AStream = new AStream();
             result.mode = AStreamMode.NO_REFERENCES;
             result.processMetadata(Data);
+            result.alias("error", Error);
+            result.registerConverter(new ErrorConverter(), Error);
             result.autodetectMetadata(true);
             return result;
         }();

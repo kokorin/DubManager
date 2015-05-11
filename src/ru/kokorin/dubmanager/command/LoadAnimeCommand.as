@@ -1,18 +1,12 @@
 package ru.kokorin.dubmanager.command {
-import flash.events.ErrorEvent;
-import flash.events.Event;
-import flash.events.IOErrorEvent;
-import flash.events.SecurityErrorEvent;
 import flash.filesystem.File;
 import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
-import flash.net.URLLoader;
-import flash.net.URLRequest;
+import flash.net.URLRequestMethod;
 import flash.net.URLVariables;
 
 import mx.collections.Sort;
 import mx.collections.SortField;
-import mx.logging.ILogger;
 
 import ru.kokorin.astream.AStream;
 import ru.kokorin.dubmanager.domain.Anime;
@@ -21,19 +15,17 @@ import ru.kokorin.dubmanager.domain.Episode;
 import ru.kokorin.dubmanager.domain.EpisodeStatus;
 import ru.kokorin.dubmanager.event.AnimeEvent;
 import ru.kokorin.util.CompareUtil;
-import ru.kokorin.util.LogUtil;
 import ru.kokorin.util.XmlUtil;
 
-public class LoadAnimeCommand {
-    public var callback:Function;
+public class LoadAnimeCommand extends UrlCommand {
     public var aStream:AStream;
 
     private var animeId:Number;
     private var xmlFile:File;
-    private static const LOGGER:ILogger = LogUtil.getLogger(LoadAnimeCommand);
 
 
     public function LoadAnimeCommand(aStream:AStream = null, animeId:Number = NaN) {
+        super(null);
         this.aStream = aStream;
         this.animeId = animeId;
     }
@@ -44,88 +36,58 @@ public class LoadAnimeCommand {
         }
         xmlFile = File.applicationStorageDirectory.resolvePath("anime/" + animeId + ".xml");
 
-        if (xmlFile.exists && xmlFile.size > 10) {
+        if (xmlFile.exists && xmlFile.size > 50) {
             var update:Date = new Date();
             update.date -= 3;
 
             LOGGER.debug("creationDate: {0}, modificationDate: {1}", xmlFile.creationDate, xmlFile.modificationDate);
             if (xmlFile.modificationDate.time > update.time ||
                     xmlFile.creationDate.time > update.time) {
-                try {
-                    LOGGER.debug("Loading data from file: {0}", xmlFile.url);
-                    const fileStream:FileStream = new FileStream();
-                    fileStream.open(xmlFile, FileMode.READ);
-                    var xmlString:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
-                    fileStream.close();
-
-                    const anime:Anime = loadFromString(xmlString);
-
-                    callback(anime);
-                    return;
-                } catch (error:Error) {
-                    LOGGER.warn(error.getStackTrace());
-                }
+                LOGGER.debug("Loading data from file: {0}", xmlFile.url);
+                load(xmlFile.url);
+                return;
             }
             LOGGER.debug("XML data is possibly obsolete");
         } else {
             LOGGER.debug("File does not exist: {0}", xmlFile.url);
         }
 
-        const loader:URLLoader = new URLLoader();
-        const request:URLRequest = new URLRequest("http://api.anidb.net:9001/httpapi");
-        const variables:URLVariables = new URLVariables();
-        variables.client = "dubmanager";
-        variables.clientver = 1;
-        variables.protover = 1;
-        variables.request = "anime";
-        variables.aid = animeId;
-        request.data = variables;
+        const data:URLVariables = new URLVariables();
+        data.client = "dubmanager";
+        data.clientver = 1;
+        data.protover = 1;
+        data.request = "anime";
+        data.aid = animeId;
 
-        loader.addEventListener(Event.COMPLETE, onLoadComplete);
-        loader.addEventListener(IOErrorEvent.IO_ERROR, onLoadError);
-        loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onLoadError);
-
-        LOGGER.debug("Loading XML: {0}?{1}", request.url, variables);
-        loader.load(request);
+        load("http://api.anidb.net:9001/httpapi", URLRequestMethod.GET, data);
     }
 
-    private function onLoadComplete(event:Event):void {
-        const loader:URLLoader = event.target as URLLoader;
-        LOGGER.info("Load complete: {0} bytes", loader.bytesLoaded);
-        var xmlString:String = String(loader.data);
 
-        if (!xmlFile.parent.exists) {
-            xmlFile.parent.createDirectory();
-        }
+    override protected function handleResult(data:Object):Object {
+        var xmlString:String = String(data);
 
-        try {
-            const fileStream:FileStream = new FileStream();
-            fileStream.open(xmlFile, FileMode.WRITE);
-            fileStream.writeUTFBytes(xmlString);
-            fileStream.close();
-            LOGGER.info("Data written to file: {0}", xmlFile.url);
-        } catch (error:Error) {
-            LOGGER.warn(error.getStackTrace());
-        }
-
-        const anime:Anime = loadFromString(xmlString);
-
-        callback(anime);
-    }
-
-    private function onLoadError(event:ErrorEvent):void {
-        LOGGER.error("Load error: {0}: {1}", event.errorID, event.text);
-        callback(new Error(event.text, event.errorID));
-    }
-
-    private function loadFromString(xmlString:String):Anime {
         xmlString = XmlUtil.replaceXmlNamespace(xmlString);
-        const result:Anime = aStream.fromXML(XML(xmlString)) as Anime;
+        const result:Object = aStream.fromXML(XML(xmlString));
 
-        if (result) {
-            result.status = AnimeStatus.NOT_STARTED;
-            if (result.episodes) {
-                for each (var episode:Episode in result.episodes) {
+        const anime:Anime = result as Anime;
+        if (anime) {
+            if (!xmlFile.parent.exists) {
+                xmlFile.parent.createDirectory();
+            }
+
+            try {
+                const fileStream:FileStream = new FileStream();
+                fileStream.open(xmlFile, FileMode.WRITE);
+                fileStream.writeUTFBytes(xmlString);
+                fileStream.close();
+                LOGGER.info("Data written to file: {0}", xmlFile.url);
+            } catch (error:Error) {
+                LOGGER.warn(error.getStackTrace());
+            }
+
+            anime.status = AnimeStatus.NOT_STARTED;
+            if (anime.episodes) {
+                for each (var episode:Episode in anime.episodes) {
                     episode.status = EpisodeStatus.NOT_STARTED;
                 }
 
@@ -138,8 +100,8 @@ public class LoadAnimeCommand {
 
                 const sort:Sort = new Sort();
                 sort.fields = [typeField, numberField];
-                result.episodes.sort = sort;
-                result.episodes.refresh();
+                anime.episodes.sort = sort;
+                anime.episodes.refresh();
             }
         }
 

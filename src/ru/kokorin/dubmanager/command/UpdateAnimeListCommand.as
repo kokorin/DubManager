@@ -33,12 +33,15 @@ public class UpdateAnimeListCommand {
             if (isNaN(anime.id) || anime.status == AnimeStatus.COMPLETE) {
                 continue;
             }
+
             var loadCommand:Object = Commands.create(LoadAnimeCommand).
                     data(aStream).
                     data(anime.id).
                     result(onEveryResult).
                     build();
-            commandBuilder.add(loadCommand);
+            commandBuilder.
+                    add(Commands.delay(500).build()).
+                    add(loadCommand);
 
             toUpdate.push(anime.id);
         }
@@ -51,8 +54,9 @@ public class UpdateAnimeListCommand {
 
         LOGGER.debug("Scheduling for update: [{0}]", toUpdate);
 
-        commandBuilder.skipErrors().skipCancellations().
-                lastResult(onLastResult).
+        commandBuilder.lastResult(onLastResult).
+                error(onError).
+                cancel(onCancel).
                 execute();
     }
 
@@ -79,6 +83,14 @@ public class UpdateAnimeListCommand {
                 break;
             }
         }
+    }
+
+    private function onError(...rest):void {
+        callback(new Error());
+    }
+
+    private function onCancel(...rest):void {
+        callback();
     }
 
     private function onLastResult(data:Object):void {
