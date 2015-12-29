@@ -12,6 +12,11 @@ public class AnimeEvent extends Event {
     public static const SAVE_DATA:String = "saveData";
     public static const LOAD_DATA:String = "loadData";
 
+    public static const NAVIGATE_TO_VIDEO:String = "navigateToVideo";
+    public static const NAVIGATE_TO_SUBTITLE:String = "navigateToSubtitle";
+    public static const NAVIGATE_TO_ANIDB:String = "navigateToAnidb";
+    public static const NAVIGATE_TO_WORLD_ART:String = "navigateToWorldArt";
+
     public var anime:Anime;
     public var data:Data;
 

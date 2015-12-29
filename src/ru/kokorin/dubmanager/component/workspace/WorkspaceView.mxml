@@ -3,7 +3,7 @@
          xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:serial="ru.kokorin.dubmanager.component.anime.*"
          xmlns:parsley="http://www.spicefactory.org/parsley"
-         xmlns:popup="ru.kokorin.component.*" xmlns:display="flash.display.*" xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:component="ru.kokorin.component.*" xmlns:display="flash.display.*" xmlns:mx="library://ns.adobe.com/flex/mx"
          creationComplete="{onCC()}">
     <fx:Declarations>
         <serial:AnimePM id="animePM"
@@ -12,7 +12,7 @@
         <parsley:PopUp open="{animePM.isOpen}" modal="true" reuse="true">
             <parsley:behaviors>
                 <fx:Array>
-                    <popup:KeepMaxSizeBehavior/>
+                    <component:KeepMaxSizeBehavior/>
                 </fx:Array>
             </parsley:behaviors>
             <serial:AnimeView model="{animePM}"/>
@@ -30,7 +30,7 @@
         <parsley:PopUp open="{animeSelectPM.isOpen}" modal="true" reuse="true">
             <parsley:behaviors>
                 <fx:Array>
-                    <popup:KeepMaxSizeBehavior/>
+                    <component:KeepMaxSizeBehavior/>
                 </fx:Array>
             </parsley:behaviors>
             <serial:AnimeSelectView model="{animeSelectPM}"/>
@@ -49,12 +49,22 @@
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'edit')}"
                                         enabled="{isSingle(dg.selectedItems)}"
                                         select="{animePM.open(dg.selectedItem)}"/>
+                <component:NativeMenuSeparator/>
+
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.videoURL')}"
                                         enabled="{isSingle(dg.selectedItems) &amp;&amp; URLUtil.isHttpURL((dg.selectedItem as Anime).videoURL)}"
-                                        select="{openVideo(dg.selectedItem as Anime)}"/>
+                                        select="{model.navigateToVideo(dg.selectedItem as Anime)}"/>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.subtitleURL')}"
                                         enabled="{isSingle(dg.selectedItems) &amp;&amp; URLUtil.isHttpURL((dg.selectedItem as Anime).subtitleURL)}"
-                                        select="{openSubtitles(dg.selectedItem as Anime)}"/>
+                                        select="{model.navigateToSubtitle(dg.selectedItem as Anime)}"/>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.anidbURL')}"
+                                        enabled="{isSingle(dg.selectedItems) &amp;&amp; (dg.selectedItem as Anime).id}"
+                                        select="{model.navigateToAnidb(dg.selectedItem as Anime)}"/>
+                <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.worldArtURL')}"
+                                        enabled="{isSingle(dg.selectedItems) &amp;&amp; (dg.selectedItem as Anime).worldArtID}"
+                                        select="{model.navigateToWorldArt(dg.selectedItem as Anime)}"/>
+                <component:NativeMenuSeparator/>
+
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'remove')}"
                                         select="{askRemove(dg.selectedItems)}"/>
             </display:items>
@@ -70,6 +80,7 @@
         import ru.kokorin.dubmanager.domain.Episode;
         import ru.kokorin.dubmanager.domain.EpisodeStatus;
         import ru.kokorin.dubmanager.domain.EpisodeType;
+        import ru.kokorin.dubmanager.event.AnimeEvent;
         import ru.kokorin.util.CompareUtil;
         import ru.kokorin.util.LabelUtil;
         import ru.kokorin.util.RendererUtil;
@@ -124,7 +135,7 @@
                 var current:Number = 0;
                 for each(var episode:Episode in aniDub.episodes) {
                     if (episode.status == EpisodeStatus.COMPLETE && episode.type == EpisodeType.REGULAR &&
-                                    current < episode.number) {
+                            current < episode.number) {
                         current = episode.epno.number;
                     }
                 }
@@ -183,20 +194,6 @@
 
             }
             return result;
-        }
-
-        private static function openVideo(serial:Anime):void {
-            if (serial && serial.videoURL) {
-                var urlReq:URLRequest = new URLRequest(serial.videoURL);
-                navigateToURL(urlReq, "_blank");
-            }
-        }
-
-        private static function openSubtitles(serial:Anime):void {
-            if (serial && serial.subtitleURL) {
-                var urlReq:URLRequest = new URLRequest(serial.subtitleURL);
-                navigateToURL(urlReq, "_blank");
-            }
         }
 
         private static function isSingle(vector:Vector.<Object>):Boolean {

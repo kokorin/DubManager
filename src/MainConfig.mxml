@@ -4,7 +4,9 @@
     <fx:Declarations>
         <parsley:Object type="{WorkspacePM}">
             <parsley:ManagedEvents
-                    names="{[AnimeEvent.SAVE_DATA, AnimeEvent.LOAD_ANIME, AnimeEvent.LOAD_TITLES, AnimeEvent.UPDATE_LIST]}"/>
+                    names="{[AnimeEvent.SAVE_DATA, AnimeEvent.LOAD_ANIME, AnimeEvent.LOAD_TITLES, AnimeEvent.UPDATE_LIST,
+                             AnimeEvent.NAVIGATE_TO_VIDEO, AnimeEvent.NAVIGATE_TO_SUBTITLE,
+                                AnimeEvent.NAVIGATE_TO_ANIDB, AnimeEvent.NAVIGATE_TO_WORLD_ART]}"/>
 
             <parsley:CommandStatus property="isLoadingAnime" selector="{AnimeEvent.LOAD_ANIME}" type="{AnimeEvent}"/>
             <parsley:CommandStatus property="isLoadingAnimeTitles" selector="{AnimeEvent.LOAD_TITLES}"
@@ -51,6 +53,22 @@
             <parsley:Command type="{UpdateAppCommand}">
             </parsley:Command>
         </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AnimeEvent.NAVIGATE_TO_VIDEO}" messageType="{AnimeEvent}">
+            <parsley:Command type="{NavigateToVideoCommand}"/>
+        </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AnimeEvent.NAVIGATE_TO_SUBTITLE}" messageType="{AnimeEvent}">
+            <parsley:Command type="{NavigateToVideoSubtitleCommand}"/>
+        </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AnimeEvent.NAVIGATE_TO_ANIDB}" messageType="{AnimeEvent}">
+            <parsley:Command type="{NavigateToAnidbCommand}"/>
+        </parsley:MapCommand>
+
+        <parsley:MapCommand selector="{AnimeEvent.NAVIGATE_TO_WORLD_ART}" messageType="{AnimeEvent}">
+            <parsley:Command type="{NavigateToWorldArtCommand}"/>
+        </parsley:MapCommand>
     </fx:Declarations>
 
     <fx:Script><![CDATA[
@@ -59,6 +77,10 @@
         import ru.kokorin.dubmanager.command.LoadAnimeCommand;
         import ru.kokorin.dubmanager.command.LoadAnimeTitlesCommand;
         import ru.kokorin.dubmanager.command.LoadDataCommand;
+        import ru.kokorin.dubmanager.command.NavigateToAnidbCommand;
+        import ru.kokorin.dubmanager.command.NavigateToVideoCommand;
+        import ru.kokorin.dubmanager.command.NavigateToVideoSubtitleCommand;
+        import ru.kokorin.dubmanager.command.NavigateToWorldArtCommand;
         import ru.kokorin.dubmanager.command.SaveDataCommand;
         import ru.kokorin.dubmanager.command.UpdateAnimeListCommand;
         import ru.kokorin.dubmanager.command.UpdateAppCommand;

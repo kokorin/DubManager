@@ -14,6 +14,10 @@ import ru.kokorin.dubmanager.event.AnimeEvent;
 [Event(name="saveData", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 [Event(name="loadAnime", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 [Event(name="loadTitles", type="ru.kokorin.dubmanager.event.AnimeEvent")]
+[Event(name="navigateToVideo", type="ru.kokorin.dubmanager.event.AnimeEvent")]
+[Event(name="navigateToSubtitle", type="ru.kokorin.dubmanager.event.AnimeEvent")]
+[Event(name="navigateToAnidb", type="ru.kokorin.dubmanager.event.AnimeEvent")]
+[Event(name="navigateToWorldArt", type="ru.kokorin.dubmanager.event.AnimeEvent")]
 public class WorkspacePM extends EventDispatcher {
     [Bindable]
     public var data:Data;
@@ -111,5 +115,27 @@ public class WorkspacePM extends EventDispatcher {
         dispatchEvent(event);
         lastAnimeListUpdateTime = (new Date()).time;
     }
+
+    public function navigateToVideo(anime:Anime):void {
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.NAVIGATE_TO_VIDEO);
+        event.anime = anime;
+        dispatchEvent(event);
+    }
+    public function navigateToSubtitle(anime:Anime):void {
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.NAVIGATE_TO_SUBTITLE);
+        event.anime = anime;
+        dispatchEvent(event);
+    }
+    public function navigateToAnidb(anime:Anime):void {
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.NAVIGATE_TO_ANIDB);
+        event.anime = anime;
+        dispatchEvent(event);
+    }
+    public function navigateToWorldArt(anime:Anime):void {
+        const event:AnimeEvent = new AnimeEvent(AnimeEvent.NAVIGATE_TO_WORLD_ART);
+        event.anime = anime;
+        dispatchEvent(event);
+    }
+
 }
 }

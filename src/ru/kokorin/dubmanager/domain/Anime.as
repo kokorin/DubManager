@@ -50,6 +50,10 @@ public class Anime implements ITitled{
     public var episodes:ArrayCollection;
 
     //------Dub related data--------
+    [AStreamAsAttribute]
+    [AStreamAlias("worldArtID")]
+    public var worldArtID:Number;
+
     [AStreamAlias("Status")]
     [AStreamOrder(1001)]
     public var status:AnimeStatus = AnimeStatus.NOT_STARTED;

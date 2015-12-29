@@ -162,6 +162,18 @@
                                         label="{resourceManager.getString('component', 'anime.subtitleURL')}">
                                 <s:TextInput width="100%" text="@{model.anime.subtitleURL}"/>
                             </s:FormItem>
+                            <s:FormItem width="100%"
+                                        label="{resourceManager.getString('component', 'anime.worldArtID')}">
+                                <s:TextInput id="worldArtIdInput" width="100" text="{model.anime.worldArtID}"
+                                             restrict="0-9">
+                                    <s:change><![CDATA[
+                                        var worldArtID:Number = parseInt(worldArtIdInput.text);
+                                        if (worldArtID && !isNaN(worldArtID)) {
+                                            model.anime.worldArtID = worldArtID;
+                                        }
+                                        ]]></s:change>
+                                </s:TextInput>
+                            </s:FormItem>
                             <s:FormItem width="100%" label="{resourceManager.getString('component', 'anime.timingBy')}">
                                 <s:TextInput width="100%" text="@{model.anime.timingBy}"/>
                             </s:FormItem>
