@@ -58,10 +58,10 @@
                                         enabled="{isSingle(dg.selectedItems) &amp;&amp; URLUtil.isHttpURL((dg.selectedItem as Anime).subtitleURL)}"
                                         select="{model.navigateToSubtitle(dg.selectedItem as Anime)}"/>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.anidbURL')}"
-                                        enabled="{isSingle(dg.selectedItems) &amp;&amp; (dg.selectedItem as Anime).id}"
+                                        enabled="{isSingle(dg.selectedItems)}"
                                         select="{model.navigateToAnidb(dg.selectedItem as Anime)}"/>
                 <display:NativeMenuItem label="{resourceManager.getString('component', 'anime.worldArtURL')}"
-                                        enabled="{isSingle(dg.selectedItems) &amp;&amp; (dg.selectedItem as Anime).worldArtID}"
+                                        enabled="{isSingle(dg.selectedItems)}"
                                         select="{model.navigateToWorldArt(dg.selectedItem as Anime)}"/>
                 <component:NativeMenuSeparator/>
 
